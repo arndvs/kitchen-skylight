@@ -10,7 +10,10 @@ const ALLOWED_INVOKE_PREFIXES = [
   'ics:',
   'sync:',
   'weather:',
-  'auth:'
+  'auth:',
+  'chores:',
+  'stars:',
+  'rewards:'
 ]
 const PUSH_PREFIX = 'push:'
 

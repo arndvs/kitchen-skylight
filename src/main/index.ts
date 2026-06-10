@@ -10,6 +10,8 @@ import { registerIpcHandlers, broadcast } from './ipc/router'
 import { createMainWindow } from './window'
 import { createWeatherService } from './services/weatherService'
 import { createAuthService } from './services/authService'
+import { createChoresService } from './services/choresService'
+import { createRewardsService } from './services/rewardsService'
 import { createGoogleAuth } from './sync/googleAuth'
 import { createGoogleSync } from './sync/googleSync'
 import { createOutboxWorker } from './sync/outboxWorker'
@@ -38,6 +40,7 @@ if (!gotLock) {
     const deviceTz = (): string => DateTime.local().zoneName ?? 'UTC'
 
     const settings = createSettingsService(db)
+    const choresService = createChoresService(db, deviceTz)
     const googleAuth = createGoogleAuth(db, settings)
     const googleSync = createGoogleSync({ db, auth: googleAuth, deviceTz })
     const outbox = createOutboxWorker({
@@ -65,7 +68,9 @@ if (!gotLock) {
       icsSync,
       syncManager,
       weather: createWeatherService(settings),
-      auth: createAuthService(settings)
+      auth: createAuthService(settings),
+      chores: choresService,
+      rewards: createRewardsService(db, choresService)
     })
     createMainWindow()
     syncManager.start()

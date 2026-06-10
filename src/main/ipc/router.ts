@@ -15,6 +15,8 @@ import type { IcsSync } from '../sync/icsSync'
 import type { SyncManager } from '../sync/scheduler'
 import type { WeatherService } from '../services/weatherService'
 import type { AuthService } from '../services/authService'
+import type { ChoresService } from '../services/choresService'
+import type { RewardsService } from '../services/rewardsService'
 
 export interface Services {
   settings: SettingsService
@@ -27,6 +29,8 @@ export interface Services {
   syncManager: SyncManager
   weather: WeatherService
   auth: AuthService
+  chores: ChoresService
+  rewards: RewardsService
 }
 
 /**
@@ -46,7 +50,14 @@ const PARENT_GATED: Set<IpcChannel> = new Set([
   'calendars:delete',
   'people:create',
   'people:update',
-  'people:delete'
+  'people:delete',
+  'chores:create',
+  'chores:update',
+  'chores:delete',
+  'rewards:create',
+  'rewards:update',
+  'rewards:delete',
+  'rewards:grant'
 ])
 
 /** Channels that mutate data, mapped to the domain the renderer should refetch. */
@@ -161,6 +172,24 @@ export function registerIpcHandlers(services: Services): void {
 
   handle('sync:now', null, () => services.syncManager.syncNow())
   handle('sync:getStatus', null, () => services.syncManager.getStatus())
+
+  handle('chores:list', null, () => services.chores.list())
+  handle('chores:create', s.choreCreateSchema, (req) => services.chores.create(req))
+  handle('chores:update', s.choreUpdateSchema, (req) => services.chores.update(req))
+  handle('chores:delete', s.idSchema, (req) => services.chores.remove(req.id))
+  handle('chores:getDay', s.choreDaySchema, (req) => services.chores.getDay(req.date))
+  handle('chores:complete', s.choreCheckSchema, (req) => services.chores.complete(req.choreId, req.date))
+  handle('chores:uncomplete', s.choreCheckSchema, (req) => services.chores.uncomplete(req.choreId, req.date))
+
+  handle('stars:balances', null, () => services.chores.balances())
+
+  handle('rewards:list', null, () => services.rewards.list())
+  handle('rewards:create', s.rewardCreateSchema, (req) => services.rewards.create(req))
+  handle('rewards:update', s.rewardUpdateSchema, (req) => services.rewards.update(req))
+  handle('rewards:delete', s.idSchema, (req) => services.rewards.remove(req.id))
+  handle('rewards:redeem', s.redeemSchema, (req) => services.rewards.redeem(req.rewardId, req.personId))
+  handle('rewards:redemptions', null, () => services.rewards.pendingRedemptions())
+  handle('rewards:grant', s.grantSchema, (req) => services.rewards.grant(req.redemptionId))
 
   handle('weather:get', null, () => services.weather.get())
   handle('weather:searchCity', s.citySearchSchema, (req) => services.weather.searchCity(req.query))

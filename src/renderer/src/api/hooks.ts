@@ -159,6 +159,77 @@ export function useSyncNow() {
   return useInvalidatingMutation(() => ipcInvoke('sync:now', undefined), [['syncStatus']])
 }
 
+export function useChores() {
+  return useQuery({ queryKey: ['chores'], queryFn: () => ipcInvoke('chores:list', undefined) })
+}
+
+export function useChoresDay(date: string) {
+  return useQuery({
+    queryKey: ['choresDay', date],
+    queryFn: () => ipcInvoke('chores:getDay', { date }),
+    placeholderData: (prev) => prev
+  })
+}
+
+export function useBalances() {
+  return useQuery({ queryKey: ['balances'], queryFn: () => ipcInvoke('stars:balances', undefined) })
+}
+
+export function useChoreMutations() {
+  const defKeys = [['chores'], ['choresDay']]
+  const checkKeys = [['choresDay'], ['balances']]
+  return {
+    create: useInvalidatingMutation(
+      (input: Parameters<typeof ipcInvoke<'chores:create'>>[1]) => ipcInvoke('chores:create', input),
+      defKeys
+    ),
+    update: useInvalidatingMutation(
+      (input: Parameters<typeof ipcInvoke<'chores:update'>>[1]) => ipcInvoke('chores:update', input),
+      defKeys
+    ),
+    remove: useInvalidatingMutation((input: { id: string }) => ipcInvoke('chores:delete', input), defKeys),
+    complete: useInvalidatingMutation(
+      (input: { choreId: string; date: string }) => ipcInvoke('chores:complete', input),
+      checkKeys
+    ),
+    uncomplete: useInvalidatingMutation(
+      (input: { choreId: string; date: string }) => ipcInvoke('chores:uncomplete', input),
+      checkKeys
+    )
+  }
+}
+
+export function useRewards() {
+  return useQuery({ queryKey: ['rewards'], queryFn: () => ipcInvoke('rewards:list', undefined) })
+}
+
+export function useRedemptions() {
+  return useQuery({ queryKey: ['redemptions'], queryFn: () => ipcInvoke('rewards:redemptions', undefined) })
+}
+
+export function useRewardMutations() {
+  return {
+    create: useInvalidatingMutation(
+      (input: { title: string; costStars: number }) => ipcInvoke('rewards:create', input),
+      [['rewards']]
+    ),
+    update: useInvalidatingMutation(
+      (input: { id: string; title?: string; costStars?: number; active?: boolean }) =>
+        ipcInvoke('rewards:update', input),
+      [['rewards']]
+    ),
+    remove: useInvalidatingMutation((input: { id: string }) => ipcInvoke('rewards:delete', input), [['rewards']]),
+    redeem: useInvalidatingMutation(
+      (input: { rewardId: string; personId: string }) => ipcInvoke('rewards:redeem', input),
+      [['balances'], ['redemptions']]
+    ),
+    grant: useInvalidatingMutation(
+      (input: { redemptionId: string }) => ipcInvoke('rewards:grant', input),
+      [['redemptions']]
+    )
+  }
+}
+
 export function useWeather() {
   return useQuery({
     queryKey: ['weather'],

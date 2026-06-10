@@ -144,7 +144,77 @@ export interface EventDeleteInput {
   occurrenceStart?: string
 }
 
-export type CalendarViewKind = 'day' | 'week' | 'month' | 'agenda'
+export type CalendarViewKind = 'day' | 'week' | 'month' | 'agenda' | 'chores'
+
+export type ChoreRoutine = 'morning' | 'evening' | null
+
+export interface ChoreDto {
+  id: string
+  title: string
+  icon: string | null
+  personId: string
+  starsValue: number
+  /** null = one-time chore on anchorDate */
+  recurrence: RecurrenceInput | null
+  /** YYYY-MM-DD; first day the chore applies (and the only day for one-offs) */
+  anchorDate: string
+  routine: ChoreRoutine
+  active: boolean
+  sortOrder: number
+}
+
+export interface ChoreCreateInput {
+  title: string
+  personId: string
+  starsValue: number
+  recurrence?: RecurrenceInput | null
+  anchorDate?: string
+  routine?: ChoreRoutine
+}
+
+export interface ChoreUpdateInput {
+  id: string
+  title?: string
+  personId?: string
+  starsValue?: number
+  recurrence?: RecurrenceInput | null
+  anchorDate?: string
+  routine?: ChoreRoutine
+  active?: boolean
+}
+
+export interface DayChoreDto {
+  choreId: string
+  title: string
+  icon: string | null
+  personId: string
+  starsValue: number
+  routine: ChoreRoutine
+  completed: boolean
+}
+
+export interface StarBalanceDto {
+  personId: string
+  balance: number
+}
+
+export interface RewardDto {
+  id: string
+  title: string
+  icon: string | null
+  costStars: number
+  active: boolean
+}
+
+export interface RedemptionDto {
+  id: string
+  rewardId: string
+  rewardTitle: string
+  personId: string
+  starsSpent: number
+  redeemedAt: string
+  status: 'pending' | 'granted'
+}
 
 export interface AppSettings {
   /** 0 = Sunday, 1 = Monday */

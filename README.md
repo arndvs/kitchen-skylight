@@ -4,7 +4,7 @@ An open-source, fully standalone family calendar display — a [Skylight Calenda
 
 ## Status
 
-**M0 – M3 complete** — a usable family calendar with sync, weather, and parental lock:
+**M0 – M4 complete** — calendar, sync, weather, parental lock, chores & rewards:
 
 - Week / Day / Month / Agenda (List) views, touch-first with ≥48px targets
 - Family member profiles with per-person colors and filter chips
@@ -20,6 +20,12 @@ An open-source, fully standalone family calendar display — a [Skylight Calenda
   date, tap for a 5-day forecast; city search and °F/°C in settings
 - **Parental PIN lock** (scrypt-hashed, enforced in the main process): settings,
   calendar/people management, and sync configuration sit behind a 4–8 digit PIN
+- **Chores & routines**: per-child daily/weekly/one-time chores grouped into
+  morning/evening routines on a per-person chore board with big tap-to-check
+  circles; parents manage definitions behind the PIN
+- **Star rewards**: completed chores earn stars (append-only ledger, balance is
+  always the sum); kids redeem rewards from the board, parents approve pending
+  redemptions in settings
 - Built-in on-screen keyboard (no reliance on the Windows touch keyboard)
 - Warm "paper planner" visual design (Fraunces + Nunito, linen + ember palette)
 
@@ -33,7 +39,6 @@ An open-source, fully standalone family calendar display — a [Skylight Calenda
 
 ### Roadmap
 
-- **M4** — Chores, routines, star rewards
 - **M5** — Lists, recipes, meal planning
 - **M6** — Photo screensaver, sleep schedule, auto-launch, installers
 

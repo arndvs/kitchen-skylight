@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react'
 import { DateTime } from 'luxon'
-import { useAuthMutations, useAuthStatus, usePeople, useSettings } from '../../api/hooks'
+import { usePeople, useSettings } from '../../api/hooks'
 import { useUi, ZONE } from '../../stores/uiStore'
 import { SegmentedControl, IconButton } from '../../components/ui'
 import { ChevronLeftIcon, ChevronRightIcon, GearIcon, PlusIcon } from '../../components/icons'
-import { PinDialog } from '../../components/PinDialog'
 import { WeatherButton } from '../weather/WeatherHeader'
 import { initials, textOn } from '../../lib/format'
 import type { CalendarViewKind } from '@shared/types'
@@ -20,7 +19,7 @@ function useNow(): DateTime {
 
 function periodLabel(view: CalendarViewKind, focusedDate: string, weekStartsOn: 0 | 1): string {
   const d = DateTime.fromISO(focusedDate, { zone: ZONE })
-  if (view === 'day') return d.toFormat('LLL d')
+  if (view === 'day' || view === 'chores') return d.toFormat('LLL d')
   if (view === 'month') return d.toFormat('LLLL yyyy')
   if (view === 'agenda') return `From ${d.toFormat('LLL d')}`
   const target = weekStartsOn === 0 ? 7 : 1
@@ -46,20 +45,6 @@ export function Header() {
   const setSettingsOpen = useUi((s) => s.setSettingsOpen)
   const weekStartsOn = settings?.weekStartsOn ?? 0
   const timeFormat = settings?.timeFormat ?? '12h'
-  const { data: auth } = useAuthStatus()
-  const authMutations = useAuthMutations()
-  const [pinPrompt, setPinPrompt] = useState(false)
-  const [pinError, setPinError] = useState<string | null>(null)
-
-  const openSettings = (): void => {
-    if (auth?.pinSet && !auth.unlocked) {
-      setPinError(null)
-      setPinPrompt(true)
-    } else {
-      setSettingsOpen(true)
-    }
-  }
-
   return (
     <header className="flex items-center gap-5 px-6 pt-5 pb-4">
       {/* Today, big and warm */}
@@ -133,35 +118,14 @@ export function Header() {
           { value: 'day', label: 'Day' },
           { value: 'week', label: 'Week' },
           { value: 'month', label: 'Month' },
-          { value: 'agenda', label: 'List' }
+          { value: 'agenda', label: 'List' },
+          { value: 'chores', label: 'Chores' }
         ]}
       />
 
-      <IconButton label="Settings" onClick={openSettings}>
+      <IconButton label="Settings" onClick={() => setSettingsOpen(true)}>
         <GearIcon size={26} />
       </IconButton>
-
-      <PinDialog
-        open={pinPrompt}
-        title="Enter parent PIN"
-        error={pinError}
-        onClose={() => setPinPrompt(false)}
-        onSubmit={(pin) =>
-          authMutations.verifyPin.mutate(
-            { pin },
-            {
-              onSuccess: (res) => {
-                if (res.valid) {
-                  setPinPrompt(false)
-                  setSettingsOpen(true)
-                } else {
-                  setPinError('Wrong PIN — try again')
-                }
-              }
-            }
-          )
-        }
-      />
     </header>
   )
 }

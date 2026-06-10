@@ -153,11 +153,17 @@ export function Dialog({
   children: ReactNode
   title?: string
 }) {
+  // shift above the on-screen keyboard while an input inside is focused
+  const oskOpen = useOsk((s) => s.target !== null)
   if (!open) return null
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+    <div className={`fixed inset-0 z-50 flex justify-center p-6 ${oskOpen ? 'items-start pt-4' : 'items-center'}`}>
       <div className="animate-fade-in absolute inset-0 bg-ink/35 backdrop-blur-[3px]" onClick={onClose} />
-      <div className="animate-pop relative w-full max-w-md rounded-3xl bg-card p-6 shadow-float">
+      <div
+        className={`animate-pop relative w-full max-w-md overflow-y-auto rounded-3xl bg-card p-6 shadow-float ${
+          oskOpen ? 'max-h-[52vh]' : 'max-h-[90vh]'
+        }`}
+      >
         {title && <h3 className="font-display mb-4 text-2xl font-semibold">{title}</h3>}
         {children}
       </div>

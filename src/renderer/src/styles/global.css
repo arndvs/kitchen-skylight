@@ -121,17 +121,19 @@ body::before {
   }
 }
 
+/* fill-mode "backwards", never "both": a retained transform would make these
+   elements the containing block for fixed-position children (dialogs, OSK) */
 @utility animate-rise {
-  animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 @utility animate-sheet-up {
-  animation: sheet-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: sheet-up 0.3s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 @utility animate-fade-in {
-  animation: fade-in 0.2s ease both;
+  animation: fade-in 0.2s ease backwards;
 }
 @utility animate-pop {
-  animation: pop 0.18s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation: pop 0.18s cubic-bezier(0.22, 1, 0.36, 1) backwards;
 }
 
 /* on-screen keyboard theme */

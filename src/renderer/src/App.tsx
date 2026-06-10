@@ -6,6 +6,7 @@ import { WeekView } from './features/calendar/WeekView'
 import { DayView } from './features/calendar/DayView'
 import { MonthView } from './features/calendar/MonthView'
 import { AgendaView } from './features/calendar/AgendaView'
+import { ChoresView } from './features/chores/ChoresView'
 import { EventEditor } from './features/calendar/EventEditor'
 import { SettingsSheet } from './features/settings/SettingsSheet'
 import { OskTray } from './components/Osk'
@@ -22,8 +23,9 @@ export default function App() {
         {view === 'day' && <DayView />}
         {view === 'month' && <MonthView />}
         {view === 'agenda' && <AgendaView />}
+        {view === 'chores' && <ChoresView />}
       </main>
-      <Fab />
+      {view !== 'chores' && <Fab />}
       <EventEditor />
       <SettingsSheet />
       <OskTray />

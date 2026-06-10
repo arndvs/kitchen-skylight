@@ -3,6 +3,10 @@ import type {
   CalendarCreateInput,
   CalendarDto,
   CalendarUpdateInput,
+  ChoreCreateInput,
+  ChoreDto,
+  ChoreUpdateInput,
+  DayChoreDto,
   EventCreateInput,
   EventDeleteInput,
   EventDto,
@@ -10,7 +14,10 @@ import type {
   OccurrenceDto,
   PersonCreateInput,
   PersonDto,
-  PersonUpdateInput
+  PersonUpdateInput,
+  RedemptionDto,
+  RewardDto,
+  StarBalanceDto
 } from '../types'
 
 /**
@@ -65,6 +72,24 @@ export type IpcContract = {
 
   'ics:add': { req: { url: string; name: string; color: string }; res: CalendarDto }
 
+  'chores:list': { req: void; res: ChoreDto[] }
+  'chores:create': { req: ChoreCreateInput; res: ChoreDto }
+  'chores:update': { req: ChoreUpdateInput; res: ChoreDto }
+  'chores:delete': { req: { id: string }; res: void }
+  'chores:getDay': { req: { date: string }; res: DayChoreDto[] }
+  'chores:complete': { req: { choreId: string; date: string }; res: { balance: number } }
+  'chores:uncomplete': { req: { choreId: string; date: string }; res: { balance: number } }
+
+  'stars:balances': { req: void; res: StarBalanceDto[] }
+
+  'rewards:list': { req: void; res: RewardDto[] }
+  'rewards:create': { req: { title: string; costStars: number }; res: RewardDto }
+  'rewards:update': { req: { id: string; title?: string; costStars?: number; active?: boolean }; res: RewardDto }
+  'rewards:delete': { req: { id: string }; res: void }
+  'rewards:redeem': { req: { rewardId: string; personId: string }; res: RedemptionDto }
+  'rewards:redemptions': { req: void; res: RedemptionDto[] }
+  'rewards:grant': { req: { redemptionId: string }; res: void }
+
   'weather:get': {
     req: void
     res: {
@@ -116,7 +141,10 @@ export const ALLOWED_CHANNEL_PREFIXES = [
   'ics:',
   'sync:',
   'weather:',
-  'auth:'
+  'auth:',
+  'chores:',
+  'stars:',
+  'rewards:'
 ] as const
 
 /** Envelope used for every invoke result so errors cross the bridge cleanly. */

@@ -1,12 +1,18 @@
 import { useState } from 'react'
-import type { CalendarDto, PersonDto, PersonRole } from '@shared/types'
+import type { CalendarDto, ChoreDto, PersonDto, PersonRole, RecurrenceInput, RewardDto } from '@shared/types'
 import { PERSON_COLORS } from '@shared/types'
+import { describeRecurrence } from '@shared/recurrence/build'
 import {
   useAuthMutations,
   useAuthStatus,
   useCalendarMutations,
   useCalendars,
+  useChoreMutations,
+  useChores,
   useCitySearch,
+  useRedemptions,
+  useRewardMutations,
+  useRewards,
   useGoogleMutations,
   useGoogleStatus,
   useIcsMutations,
@@ -25,19 +31,46 @@ import { OskInput } from '../../components/Osk'
 import { PlusIcon } from '../../components/icons'
 import { initials, textOn } from '../../lib/format'
 
-type Tab = 'family' | 'calendars' | 'general'
+type Tab = 'family' | 'calendars' | 'chores' | 'general'
 
 export function SettingsSheet() {
   const open = useUi((s) => s.settingsOpen)
   const setOpen = useUi((s) => s.setSettingsOpen)
   const [tab, setTab] = useState<Tab>('family')
+  const [pinError, setPinError] = useState<string | null>(null)
   const { data: auth } = useAuthStatus()
   const authMutations = useAuthMutations()
 
   const close = (): void => {
     setOpen(false)
+    setPinError(null)
     // closing settings re-arms the parental lock immediately
     if (auth?.pinSet) authMutations.lock.mutate(undefined)
+  }
+
+  // The PIN gate guards EVERY way into settings (main-side IPC gating is the
+  // actual security boundary; this is the matching UX).
+  const locked = (auth?.pinSet ?? false) && !(auth?.unlocked ?? false)
+  if (open && locked) {
+    return (
+      <PinDialog
+        open
+        title="Enter parent PIN"
+        error={pinError}
+        onClose={close}
+        onSubmit={(pin) =>
+          authMutations.verifyPin.mutate(
+            { pin },
+            {
+              onSuccess: (res) => {
+                if (!res.valid) setPinError('Wrong PIN — try again')
+                else setPinError(null)
+              }
+            }
+          )
+        }
+      />
+    )
   }
 
   return (
@@ -49,12 +82,14 @@ export function SettingsSheet() {
           options={[
             { value: 'family', label: 'Family' },
             { value: 'calendars', label: 'Calendars' },
+            { value: 'chores', label: 'Chores' },
             { value: 'general', label: 'General' }
           ]}
         />
       </div>
       {tab === 'family' && <FamilyTab />}
       {tab === 'calendars' && <CalendarsTab />}
+      {tab === 'chores' && <ChoresTab />}
       {tab === 'general' && <GeneralTab />}
     </Sheet>
   )
@@ -438,6 +473,333 @@ function CalendarsTab() {
               Cancel
             </BigButton>
             <BigButton onClick={save} disabled={!name.trim()}>
+              Save
+            </BigButton>
+          </div>
+        </div>
+      </Dialog>
+    </div>
+  )
+}
+
+function Stepper({ value, onChange, min = 0, max = 99 }: { value: number; onChange: (v: number) => void; min?: number; max?: number }) {
+  return (
+    <div className="flex items-center gap-3">
+      <button
+        type="button"
+        onClick={() => onChange(Math.max(min, value - 1))}
+        className="pressable flex h-12 w-12 items-center justify-center rounded-full bg-paper-deep text-2xl font-bold"
+      >
+        −
+      </button>
+      <span className="w-12 text-center text-2xl font-extrabold">{value}</span>
+      <button
+        type="button"
+        onClick={() => onChange(Math.min(max, value + 1))}
+        className="pressable flex h-12 w-12 items-center justify-center rounded-full bg-paper-deep text-2xl font-bold"
+      >
+        +
+      </button>
+    </div>
+  )
+}
+
+const WEEKDAY_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
+type ScheduleKind = 'daily' | 'weekly' | 'once'
+
+function scheduleOf(recurrence: RecurrenceInput | null): ScheduleKind {
+  if (!recurrence) return 'once'
+  return recurrence.freq === 'weekly' ? 'weekly' : 'daily'
+}
+
+function ChoresTab() {
+  const { data: people = [] } = usePeople()
+  const { data: chores = [] } = useChores()
+  const { data: rewards = [] } = useRewards()
+  const { data: redemptions = [] } = useRedemptions()
+  const choreMutations = useChoreMutations()
+  const rewardMutations = useRewardMutations()
+  const peopleById = new Map(people.map((p) => [p.id, p]))
+
+  const [editingChore, setEditingChore] = useState<ChoreDto | 'new' | null>(null)
+  const [choreTitle, setChoreTitle] = useState('')
+  const [chorePerson, setChorePerson] = useState<string | null>(null)
+  const [choreStars, setChoreStars] = useState(1)
+  const [schedule, setSchedule] = useState<ScheduleKind>('daily')
+  const [weekdays, setWeekdays] = useState<number[]>([])
+  const [routine, setRoutine] = useState<'any' | 'morning' | 'evening'>('any')
+
+  const [editingReward, setEditingReward] = useState<RewardDto | 'new' | null>(null)
+  const [rewardTitle, setRewardTitle] = useState('')
+  const [rewardCost, setRewardCost] = useState(10)
+
+  const openChoreEditor = (c: ChoreDto | 'new'): void => {
+    setEditingChore(c)
+    if (c === 'new') {
+      setChoreTitle('')
+      setChorePerson(people[0]?.id ?? null)
+      setChoreStars(1)
+      setSchedule('daily')
+      setWeekdays([])
+      setRoutine('any')
+    } else {
+      setChoreTitle(c.title)
+      setChorePerson(c.personId)
+      setChoreStars(c.starsValue)
+      setSchedule(scheduleOf(c.recurrence))
+      setWeekdays(c.recurrence?.byWeekdays ?? [])
+      setRoutine(c.routine ?? 'any')
+    }
+  }
+
+  const saveChore = (): void => {
+    if (!choreTitle.trim() || !chorePerson) return
+    const recurrence: RecurrenceInput | null =
+      schedule === 'once'
+        ? null
+        : schedule === 'daily'
+          ? { freq: 'daily' }
+          : { freq: 'weekly', byWeekdays: weekdays.length > 0 ? weekdays : [0] }
+    const common = {
+      title: choreTitle.trim(),
+      personId: chorePerson,
+      starsValue: choreStars,
+      recurrence,
+      routine: routine === 'any' ? null : routine
+    }
+    if (editingChore === 'new') choreMutations.create.mutate(common)
+    else if (editingChore) choreMutations.update.mutate({ id: editingChore.id, ...common })
+    setEditingChore(null)
+  }
+
+  const saveReward = (): void => {
+    if (!rewardTitle.trim()) return
+    if (editingReward === 'new') rewardMutations.create.mutate({ title: rewardTitle.trim(), costStars: rewardCost })
+    else if (editingReward) rewardMutations.update.mutate({ id: editingReward.id, title: rewardTitle.trim(), costStars: rewardCost })
+    setEditingReward(null)
+  }
+
+  return (
+    <div className="flex flex-col gap-6">
+      {redemptions.length > 0 && (
+        <div>
+          <FieldLabel>Waiting for approval</FieldLabel>
+          <div className="flex flex-col gap-2">
+            {redemptions.map((r) => (
+              <div key={r.id} className="flex items-center gap-3 rounded-2xl bg-sun-soft p-3">
+                <span className="min-w-0 flex-1 truncate text-lg font-bold">
+                  {peopleById.get(r.personId)?.name ?? 'Someone'} → {r.rewardTitle}
+                </span>
+                <span className="text-base font-extrabold text-ember-deep">★ {r.starsSpent}</span>
+                <BigButton onClick={() => rewardMutations.grant.mutate({ redemptionId: r.id })}>Grant</BigButton>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      <div>
+        <FieldLabel>Chores & routines</FieldLabel>
+        <div className="flex flex-col gap-2">
+          {chores.map((c) => {
+            const person = peopleById.get(c.personId)
+            return (
+              <button
+                key={c.id}
+                type="button"
+                onClick={() => openChoreEditor(c)}
+                className="pressable flex items-center gap-3 rounded-2xl bg-paper-deep/50 p-3 text-left"
+              >
+                <span className="h-6 w-6 shrink-0 rounded-full" style={{ backgroundColor: person?.color ?? '#999' }} />
+                <span className="min-w-0 flex-1">
+                  <span className="block truncate text-lg font-bold">{c.title}</span>
+                  <span className="block text-sm font-bold text-ink-faint">
+                    {person?.name ?? '—'} · {c.recurrence ? describeRecurrence(c.recurrence) : 'One time'}
+                    {c.routine ? ` · ${c.routine}` : ''}
+                  </span>
+                </span>
+                {c.starsValue > 0 && <span className="text-base font-extrabold text-ember-deep">★ {c.starsValue}</span>}
+              </button>
+            )
+          })}
+          <BigButton variant="ghost" onClick={() => openChoreEditor('new')} disabled={people.length === 0}>
+            <span className="flex items-center justify-center gap-2">
+              <PlusIcon size={20} /> Add chore
+            </span>
+          </BigButton>
+          {people.length === 0 && (
+            <p className="text-sm font-semibold text-ink-faint">Add family members first — chores belong to a person.</p>
+          )}
+        </div>
+      </div>
+
+      <div>
+        <FieldLabel>Rewards</FieldLabel>
+        <div className="flex flex-col gap-2">
+          {rewards.map((r) => (
+            <button
+              key={r.id}
+              type="button"
+              onClick={() => {
+                setEditingReward(r)
+                setRewardTitle(r.title)
+                setRewardCost(r.costStars)
+              }}
+              className="pressable flex items-center gap-3 rounded-2xl bg-paper-deep/50 p-3 text-left"
+            >
+              <span className="min-w-0 flex-1 truncate text-lg font-bold">{r.title}</span>
+              <span className="text-base font-extrabold text-ember-deep">★ {r.costStars}</span>
+            </button>
+          ))}
+          <BigButton
+            variant="ghost"
+            onClick={() => {
+              setEditingReward('new')
+              setRewardTitle('')
+              setRewardCost(10)
+            }}
+          >
+            <span className="flex items-center justify-center gap-2">
+              <PlusIcon size={20} /> Add reward
+            </span>
+          </BigButton>
+        </div>
+      </div>
+
+      <Dialog
+        open={editingChore !== null}
+        onClose={() => setEditingChore(null)}
+        title={editingChore === 'new' ? 'Add chore' : 'Edit chore'}
+      >
+        <div className="flex flex-col gap-4">
+          <div>
+            <FieldLabel>Chore</FieldLabel>
+            <OskInput value={choreTitle} onChange={setChoreTitle} placeholder="e.g. Make your bed" autoFocus={editingChore === 'new'} />
+          </div>
+          <div>
+            <FieldLabel>Who</FieldLabel>
+            <div className="flex flex-wrap gap-2">
+              {people.map((p) => {
+                const on = chorePerson === p.id
+                return (
+                  <button
+                    key={p.id}
+                    type="button"
+                    onClick={() => setChorePerson(p.id)}
+                    className={`pressable rounded-full border-2 px-4 py-2 text-base font-bold ${
+                      on ? 'border-transparent' : 'border-line bg-card text-ink-soft'
+                    }`}
+                    style={on ? { backgroundColor: p.color, color: textOn(p.color) } : undefined}
+                  >
+                    {p.name}
+                  </button>
+                )
+              })}
+            </div>
+          </div>
+          <div className="flex items-end gap-6">
+            <div>
+              <FieldLabel>Stars</FieldLabel>
+              <Stepper value={choreStars} onChange={setChoreStars} max={20} />
+            </div>
+            <div className="flex-1">
+              <FieldLabel>Routine</FieldLabel>
+              <SegmentedControl
+                value={routine}
+                onChange={setRoutine}
+                options={[
+                  { value: 'any', label: 'Anytime' },
+                  { value: 'morning', label: 'Morning' },
+                  { value: 'evening', label: 'Evening' }
+                ]}
+              />
+            </div>
+          </div>
+          <div>
+            <FieldLabel>Repeats</FieldLabel>
+            <SegmentedControl
+              value={schedule}
+              onChange={setSchedule}
+              options={[
+                { value: 'daily', label: 'Every day' },
+                { value: 'weekly', label: 'Weekly' },
+                { value: 'once', label: 'One time' }
+              ]}
+            />
+            {schedule === 'weekly' && (
+              <div className="mt-3 flex gap-2">
+                {WEEKDAY_SHORT.map((label, i) => {
+                  const on = weekdays.includes(i)
+                  return (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => setWeekdays(on ? weekdays.filter((d) => d !== i) : [...weekdays, i])}
+                      className={`pressable flex h-11 w-11 items-center justify-center rounded-full text-base font-extrabold ${
+                        on ? 'bg-ember text-white' : 'bg-paper-deep text-ink-soft'
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+          <div className="mt-1 flex gap-3">
+            {editingChore !== 'new' && editingChore && (
+              <BigButton
+                variant="danger"
+                onClick={() => {
+                  choreMutations.remove.mutate({ id: editingChore.id })
+                  setEditingChore(null)
+                }}
+              >
+                Delete
+              </BigButton>
+            )}
+            <div className="flex-1" />
+            <BigButton variant="ghost" onClick={() => setEditingChore(null)}>
+              Cancel
+            </BigButton>
+            <BigButton onClick={saveChore} disabled={!choreTitle.trim() || !chorePerson}>
+              Save
+            </BigButton>
+          </div>
+        </div>
+      </Dialog>
+
+      <Dialog
+        open={editingReward !== null}
+        onClose={() => setEditingReward(null)}
+        title={editingReward === 'new' ? 'Add reward' : 'Edit reward'}
+      >
+        <div className="flex flex-col gap-4">
+          <div>
+            <FieldLabel>Reward</FieldLabel>
+            <OskInput value={rewardTitle} onChange={setRewardTitle} placeholder="e.g. Movie night pick" autoFocus={editingReward === 'new'} />
+          </div>
+          <div>
+            <FieldLabel>Cost in stars</FieldLabel>
+            <Stepper value={rewardCost} onChange={setRewardCost} min={1} max={999} />
+          </div>
+          <div className="mt-1 flex gap-3">
+            {editingReward !== 'new' && editingReward && (
+              <BigButton
+                variant="danger"
+                onClick={() => {
+                  rewardMutations.remove.mutate({ id: editingReward.id })
+                  setEditingReward(null)
+                }}
+              >
+                Delete
+              </BigButton>
+            )}
+            <div className="flex-1" />
+            <BigButton variant="ghost" onClick={() => setEditingReward(null)}>
+              Cancel
+            </BigButton>
+            <BigButton onClick={saveReward} disabled={!rewardTitle.trim()}>
               Save
             </BigButton>
           </div>

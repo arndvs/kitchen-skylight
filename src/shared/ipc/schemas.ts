@@ -86,7 +86,7 @@ export const settingsPatchSchema = z.object({
   patch: z
     .object({
       weekStartsOn: z.union([z.literal(0), z.literal(1)]).optional(),
-      defaultView: z.enum(['day', 'week', 'month', 'agenda']).optional(),
+      defaultView: z.enum(['day', 'week', 'month', 'agenda', 'chores']).optional(),
       timeFormat: z.enum(['12h', '24h']).optional(),
       temperatureUnit: z.enum(['f', 'c']).optional(),
       weather: z.object({ lat: z.number(), lon: z.number(), label: z.string() }).nullable().optional(),
@@ -120,6 +120,46 @@ export const icsAddSchema = z.object({
   name: z.string().trim().min(1).max(80),
   color: hexColor
 })
+
+const routine = z.enum(['morning', 'evening']).nullable()
+
+export const choreCreateSchema = z.object({
+  title: z.string().trim().min(1).max(120),
+  personId: id,
+  starsValue: z.number().int().min(0).max(99),
+  recurrence: recurrenceSchema.nullish(),
+  anchorDate: isoDate.optional(),
+  routine: routine.optional()
+})
+
+export const choreUpdateSchema = z.object({
+  id,
+  title: z.string().trim().min(1).max(120).optional(),
+  personId: id.optional(),
+  starsValue: z.number().int().min(0).max(99).optional(),
+  recurrence: recurrenceSchema.nullable().optional(),
+  anchorDate: isoDate.optional(),
+  routine: routine.optional(),
+  active: z.boolean().optional()
+})
+
+export const choreDaySchema = z.object({ date: isoDate })
+export const choreCheckSchema = z.object({ choreId: id, date: isoDate })
+
+export const rewardCreateSchema = z.object({
+  title: z.string().trim().min(1).max(120),
+  costStars: z.number().int().min(1).max(9999)
+})
+
+export const rewardUpdateSchema = z.object({
+  id,
+  title: z.string().trim().min(1).max(120).optional(),
+  costStars: z.number().int().min(1).max(9999).optional(),
+  active: z.boolean().optional()
+})
+
+export const redeemSchema = z.object({ rewardId: id, personId: id })
+export const grantSchema = z.object({ redemptionId: id })
 
 export const citySearchSchema = z.object({ query: z.string().trim().min(2).max(80) })
 

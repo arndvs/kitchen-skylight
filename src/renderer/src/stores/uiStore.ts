@@ -44,13 +44,11 @@ export const useUi = create<UiState>((set, get) => ({
     const { view, focusedDate } = get()
     const d = DateTime.fromISO(focusedDate, { zone: ZONE })
     const next =
-      view === 'day'
+      view === 'day' || view === 'chores'
         ? d.plus({ days: direction })
         : view === 'month'
           ? d.plus({ months: direction })
-          : view === 'agenda'
-            ? d.plus({ weeks: direction })
-            : d.plus({ weeks: direction })
+          : d.plus({ weeks: direction })
     set({ focusedDate: next.toISODate()! })
   },
   togglePerson: (id) =>

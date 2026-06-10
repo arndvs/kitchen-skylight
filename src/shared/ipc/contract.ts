@@ -65,6 +65,25 @@ export type IpcContract = {
 
   'ics:add': { req: { url: string; name: string; color: string }; res: CalendarDto }
 
+  'weather:get': {
+    req: void
+    res: {
+      temperature: number
+      code: number
+      isDay: boolean
+      unit: 'f' | 'c'
+      label: string
+      daily: { date: string; code: number; high: number; low: number; precipProb: number | null }[]
+      fetchedAt: string
+    } | null
+  }
+  'weather:searchCity': { req: { query: string }; res: { label: string; lat: number; lon: number }[] }
+
+  'auth:getStatus': { req: void; res: { pinSet: boolean; unlocked: boolean } }
+  'auth:verifyPin': { req: { pin: string }; res: { valid: boolean } }
+  'auth:setPin': { req: { pin: string | null }; res: void }
+  'auth:lock': { req: void; res: void }
+
   'sync:now': { req: void; res: void }
   'sync:getStatus': {
     req: void
@@ -95,7 +114,9 @@ export const ALLOWED_CHANNEL_PREFIXES = [
   'events:',
   'google:',
   'ics:',
-  'sync:'
+  'sync:',
+  'weather:',
+  'auth:'
 ] as const
 
 /** Envelope used for every invoke result so errors cross the bridge cleanly. */

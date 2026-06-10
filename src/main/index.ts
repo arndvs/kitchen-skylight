@@ -8,6 +8,8 @@ import { createCalendarService } from './services/calendarService'
 import { createEventService } from './services/eventService'
 import { registerIpcHandlers, broadcast } from './ipc/router'
 import { createMainWindow } from './window'
+import { createWeatherService } from './services/weatherService'
+import { createAuthService } from './services/authService'
 import { createGoogleAuth } from './sync/googleAuth'
 import { createGoogleSync } from './sync/googleSync'
 import { createOutboxWorker } from './sync/outboxWorker'
@@ -61,7 +63,9 @@ if (!gotLock) {
       googleAuth,
       googleSync,
       icsSync,
-      syncManager
+      syncManager,
+      weather: createWeatherService(settings),
+      auth: createAuthService(settings)
     })
     createMainWindow()
     syncManager.start()

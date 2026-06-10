@@ -81,3 +81,64 @@ export const CalendarIcon = (p: IconProps) => (
     <path d="M16 2v4M8 2v4M3 10h18" />
   </svg>
 )
+
+export const SunIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <circle cx="12" cy="12" r="4" />
+    <path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4" />
+  </svg>
+)
+
+export const MoonIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M21 12.8A9 9 0 1 1 11.2 3 7 7 0 0 0 21 12.8Z" />
+  </svg>
+)
+
+export const CloudIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M17.5 19a4.5 4.5 0 0 0 .4-9A7 7 0 0 0 4.3 12.5 4 4 0 0 0 6 19h11.5Z" />
+  </svg>
+)
+
+export const CloudSunIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M12 2v2M4.9 4.9l1.4 1.4M2 12h2M19.1 4.9l-1.4 1.4M22 12h-1" />
+    <path d="M15.9 9.4a4 4 0 1 0-6.4 1.2" />
+    <path d="M17 21a4 4 0 0 0 .5-8A5.5 5.5 0 0 0 7 14.5 3.5 3.5 0 0 0 8.5 21H17Z" />
+  </svg>
+)
+
+export const FogIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M4 9h16M3 13h18M5 17h14" />
+  </svg>
+)
+
+export const RainIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M17.5 14a4.5 4.5 0 0 0 .4-9A7 7 0 0 0 4.3 7.5 4 4 0 0 0 6 14h11.5Z" />
+    <path d="M8 17v3M12 17v4M16 17v3" />
+  </svg>
+)
+
+export const SnowIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M17.5 14a4.5 4.5 0 0 0 .4-9A7 7 0 0 0 4.3 7.5 4 4 0 0 0 6 14h11.5Z" />
+    <path d="M8 17.5h.01M12 19h.01M16 17.5h.01M10 21h.01M14 21.5h.01" />
+  </svg>
+)
+
+export const StormIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M17.5 13a4.5 4.5 0 0 0 .4-9A7 7 0 0 0 4.3 6.5 4 4 0 0 0 6 13h11.5Z" />
+    <path d="m13 13-3 5h4l-3 5" />
+  </svg>
+)
+
+export const LockIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="4" y="11" width="16" height="10" rx="2" />
+    <path d="M8 11V7a4 4 0 0 1 8 0v4" />
+  </svg>
+)

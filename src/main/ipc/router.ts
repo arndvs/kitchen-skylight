@@ -13,6 +13,8 @@ import type { GoogleAuth } from '../sync/googleAuth'
 import type { GoogleSync } from '../sync/googleSync'
 import type { IcsSync } from '../sync/icsSync'
 import type { SyncManager } from '../sync/scheduler'
+import type { WeatherService } from '../services/weatherService'
+import type { AuthService } from '../services/authService'
 
 export interface Services {
   settings: SettingsService
@@ -23,7 +25,29 @@ export interface Services {
   googleSync: GoogleSync
   icsSync: IcsSync
   syncManager: SyncManager
+  weather: WeatherService
+  auth: AuthService
 }
+
+/**
+ * Channels behind the parental PIN gate. Enforced here in the main process —
+ * the renderer's lock screen is UX, this is the security boundary.
+ */
+const PARENT_GATED: Set<IpcChannel> = new Set([
+  'settings:set',
+  'auth:setPin',
+  'google:setCredentials',
+  'google:connect',
+  'google:disconnect',
+  'google:setCalendarSelected',
+  'ics:add',
+  'calendars:create',
+  'calendars:update',
+  'calendars:delete',
+  'people:create',
+  'people:update',
+  'people:delete'
+])
 
 /** Channels that mutate data, mapped to the domain the renderer should refetch. */
 const MUTATION_DOMAINS: Partial<Record<IpcChannel, 'events' | 'people' | 'calendars' | 'settings'>> = {
@@ -57,6 +81,7 @@ export function registerIpcHandlers(services: Services): void {
   ): void {
     ipcMain.handle(channel, async (_event, payload): Promise<IpcResult<IpcContract[K]['res']>> => {
       try {
+        if (PARENT_GATED.has(channel)) services.auth.assertUnlocked()
         const req = (schema ? schema.parse(payload) : payload) as IpcContract[K]['req']
         const data = await fn(req)
         const domain = MUTATION_DOMAINS[channel]
@@ -136,4 +161,15 @@ export function registerIpcHandlers(services: Services): void {
 
   handle('sync:now', null, () => services.syncManager.syncNow())
   handle('sync:getStatus', null, () => services.syncManager.getStatus())
+
+  handle('weather:get', null, () => services.weather.get())
+  handle('weather:searchCity', s.citySearchSchema, (req) => services.weather.searchCity(req.query))
+
+  handle('auth:getStatus', null, () => ({
+    pinSet: services.auth.pinSet(),
+    unlocked: services.auth.isUnlocked()
+  }))
+  handle('auth:verifyPin', s.pinVerifySchema, (req) => ({ valid: services.auth.verifyPin(req.pin) }))
+  handle('auth:setPin', s.pinSetSchema, (req) => services.auth.setPin(req.pin))
+  handle('auth:lock', null, () => services.auth.lock())
 }

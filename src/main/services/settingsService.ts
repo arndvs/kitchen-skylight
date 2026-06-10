@@ -32,6 +32,10 @@ export function createSettingsService(db: AppDb) {
     else db.insert(settings).values({ key, value }).run()
   }
 
+  function deleteRaw(key: string): void {
+    db.delete(settings).where(eq(settings.key, key)).run()
+  }
+
   function set(patch: Partial<AppSettings>): AppSettings {
     db.transaction((tx) => {
       for (const [key, value] of Object.entries(patch)) {
@@ -48,7 +52,7 @@ export function createSettingsService(db: AppDb) {
     return getAll()
   }
 
-  return { getAll, set, getRaw, setRaw }
+  return { getAll, set, getRaw, setRaw, deleteRaw }
 }
 
 export type SettingsService = ReturnType<typeof createSettingsService>

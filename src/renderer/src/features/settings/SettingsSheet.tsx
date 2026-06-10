@@ -2,8 +2,11 @@ import { useState } from 'react'
 import type { CalendarDto, PersonDto, PersonRole } from '@shared/types'
 import { PERSON_COLORS } from '@shared/types'
 import {
+  useAuthMutations,
+  useAuthStatus,
   useCalendarMutations,
   useCalendars,
+  useCitySearch,
   useGoogleMutations,
   useGoogleStatus,
   useIcsMutations,
@@ -15,6 +18,7 @@ import {
   useSyncNow,
   useSyncStatus
 } from '../../api/hooks'
+import { PinDialog } from '../../components/PinDialog'
 import { useUi } from '../../stores/uiStore'
 import { BigButton, Dialog, FieldLabel, SegmentedControl, Sheet, Toggle } from '../../components/ui'
 import { OskInput } from '../../components/Osk'
@@ -27,9 +31,17 @@ export function SettingsSheet() {
   const open = useUi((s) => s.settingsOpen)
   const setOpen = useUi((s) => s.setSettingsOpen)
   const [tab, setTab] = useState<Tab>('family')
+  const { data: auth } = useAuthStatus()
+  const authMutations = useAuthMutations()
+
+  const close = (): void => {
+    setOpen(false)
+    // closing settings re-arms the parental lock immediately
+    if (auth?.pinSet) authMutations.lock.mutate(undefined)
+  }
 
   return (
-    <Sheet open={open} onClose={() => setOpen(false)} title="Settings" wide>
+    <Sheet open={open} onClose={close} title="Settings" wide>
       <div className="mb-5">
         <SegmentedControl
           value={tab}
@@ -435,12 +447,138 @@ function CalendarsTab() {
   )
 }
 
+function WeatherSection() {
+  const { data: settings } = useSettings()
+  const mutation = useSettingsMutation()
+  const search = useCitySearch()
+  const [query, setQuery] = useState('')
+  if (!settings) return null
+
+  return (
+    <div>
+      <FieldLabel>Weather</FieldLabel>
+      <div className="flex flex-col gap-3 rounded-2xl bg-paper-deep/50 p-4">
+        {settings.weather ? (
+          <div className="flex items-center gap-3">
+            <span className="flex-1 text-lg font-bold">{settings.weather.label}</span>
+            <button
+              type="button"
+              onClick={() => mutation.mutate({ weather: null })}
+              className="pressable rounded-full border-2 border-ember-soft px-4 py-1.5 text-sm font-bold text-ember-deep"
+            >
+              Remove
+            </button>
+          </div>
+        ) : (
+          <p className="text-base font-semibold text-ink-soft">Pick a location to show the forecast in the header.</p>
+        )}
+        <div className="flex gap-2">
+          <OskInput value={query} onChange={setQuery} placeholder="Search city…" className="flex-1" />
+          <BigButton variant="ghost" onClick={() => search.mutate(query)} disabled={query.trim().length < 2 || search.isPending}>
+            Search
+          </BigButton>
+        </div>
+        {search.data && (
+          <div className="flex flex-col gap-1.5">
+            {search.data.length === 0 && <p className="text-sm font-bold text-ink-faint">No places found</p>}
+            {search.data.map((city) => (
+              <button
+                key={`${city.lat},${city.lon}`}
+                type="button"
+                onClick={() => {
+                  mutation.mutate({ weather: city })
+                  search.reset()
+                  setQuery('')
+                }}
+                className="pressable rounded-xl bg-card px-4 py-2.5 text-left text-base font-bold hover:bg-sun-soft"
+              >
+                {city.label}
+              </button>
+            ))}
+          </div>
+        )}
+        <div>
+          <FieldLabel>Units</FieldLabel>
+          <SegmentedControl
+            value={settings.temperatureUnit}
+            onChange={(temperatureUnit) => mutation.mutate({ temperatureUnit })}
+            options={[
+              { value: 'f', label: '°F' },
+              { value: 'c', label: '°C' }
+            ]}
+          />
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function ParentalLockSection() {
+  const { data: auth } = useAuthStatus()
+  const authMutations = useAuthMutations()
+  const [step, setStep] = useState<null | 'new' | 'confirm'>(null)
+  const [firstPin, setFirstPin] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  if (!auth) return null
+
+  return (
+    <div>
+      <FieldLabel>Parental lock</FieldLabel>
+      <div className="flex flex-col gap-3 rounded-2xl bg-paper-deep/50 p-4">
+        <p className="text-base font-semibold text-ink-soft">
+          {auth.pinSet
+            ? 'A PIN is required to open settings and manage calendars, people, and sync.'
+            : 'Set a PIN so kids can use the calendar but not change settings.'}
+        </p>
+        <div className="flex gap-3">
+          <BigButton
+            variant="ghost"
+            onClick={() => {
+              setError(null)
+              setStep('new')
+            }}
+          >
+            {auth.pinSet ? 'Change PIN' : 'Set PIN'}
+          </BigButton>
+          {auth.pinSet && (
+            <BigButton variant="danger" onClick={() => authMutations.setPin.mutate({ pin: null })}>
+              Remove PIN
+            </BigButton>
+          )}
+        </div>
+      </div>
+
+      <PinDialog
+        open={step !== null}
+        title={step === 'confirm' ? 'Enter it once more' : 'Choose a PIN (4–8 digits)'}
+        error={error}
+        onClose={() => setStep(null)}
+        onSubmit={(pin) => {
+          if (step === 'new') {
+            setFirstPin(pin)
+            setError(null)
+            setStep('confirm')
+          } else if (pin === firstPin) {
+            authMutations.setPin.mutate({ pin })
+            setStep(null)
+          } else {
+            setError("PINs didn't match — start again")
+            setStep('new')
+          }
+        }}
+      />
+    </div>
+  )
+}
+
 function GeneralTab() {
   const { data: settings } = useSettings()
   const mutation = useSettingsMutation()
   if (!settings) return null
   return (
     <div className="flex max-w-xl flex-col gap-6">
+      <WeatherSection />
+      <ParentalLockSection />
       <div>
         <FieldLabel>Week starts on</FieldLabel>
         <SegmentedControl
@@ -464,7 +602,7 @@ function GeneralTab() {
         />
       </div>
       <p className="text-sm font-semibold text-ink-faint">
-        Weather, sleep schedule, screensaver, and parental lock arrive in upcoming milestones.
+        Sleep schedule and the photo screensaver arrive in upcoming milestones.
       </p>
     </div>
   )

@@ -95,7 +95,7 @@ export function useCalendarMutations() {
 export function useSettingsMutation() {
   return useInvalidatingMutation(
     (patch: Partial<AppSettings>) => ipcInvoke('settings:set', { patch }),
-    [['settings'], ['occurrences']]
+    [['settings'], ['occurrences'], ['weather']]
   )
 }
 
@@ -157,6 +157,34 @@ export function useIcsMutations() {
 
 export function useSyncNow() {
   return useInvalidatingMutation(() => ipcInvoke('sync:now', undefined), [['syncStatus']])
+}
+
+export function useWeather() {
+  return useQuery({
+    queryKey: ['weather'],
+    queryFn: () => ipcInvoke('weather:get', undefined),
+    refetchInterval: 10 * 60_000,
+    retry: 2
+  })
+}
+
+export function useCitySearch() {
+  return useMutation({
+    mutationFn: (query: string) => ipcInvoke('weather:searchCity', { query })
+  })
+}
+
+export function useAuthStatus() {
+  return useQuery({ queryKey: ['authStatus'], queryFn: () => ipcInvoke('auth:getStatus', undefined) })
+}
+
+export function useAuthMutations() {
+  const keys = [['authStatus']]
+  return {
+    verifyPin: useInvalidatingMutation((input: { pin: string }) => ipcInvoke('auth:verifyPin', input), keys),
+    setPin: useInvalidatingMutation((input: { pin: string | null }) => ipcInvoke('auth:setPin', input), keys),
+    lock: useInvalidatingMutation(() => ipcInvoke('auth:lock', undefined), keys)
+  }
 }
 
 /** Refetch when the main process announces data changes (sync engine, other windows). */

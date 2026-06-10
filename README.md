@@ -4,7 +4,7 @@ An open-source, fully standalone family calendar display — a [Skylight Calenda
 
 ## Status
 
-**M0 + M1 + M2 complete** — a usable family calendar with external sync:
+**M0 – M3 complete** — a usable family calendar with sync, weather, and parental lock:
 
 - Week / Day / Month / Agenda (List) views, touch-first with ≥48px targets
 - Family member profiles with per-person colors and filter chips
@@ -16,6 +16,10 @@ An open-source, fully standalone family calendar display — a [Skylight Calenda
   push of local edits with If-Match etags and last-writer-wins conflict
   resolution, person assignments round-tripped via extended properties
 - **ICS feed subscriptions** (read-only, conditional GET, 30-minute refresh)
+- **Weather header** via Open-Meteo (no API key): current conditions next to the
+  date, tap for a 5-day forecast; city search and °F/°C in settings
+- **Parental PIN lock** (scrypt-hashed, enforced in the main process): settings,
+  calendar/people management, and sync configuration sit behind a 4–8 digit PIN
 - Built-in on-screen keyboard (no reliance on the Windows touch keyboard)
 - Warm "paper planner" visual design (Fraunces + Nunito, linen + ember palette)
 
@@ -29,7 +33,6 @@ An open-source, fully standalone family calendar display — a [Skylight Calenda
 
 ### Roadmap
 
-- **M3** — Weather header (Open-Meteo), full settings, parental PIN lock
 - **M4** — Chores, routines, star rewards
 - **M5** — Lists, recipes, meal planning
 - **M6** — Photo screensaver, sleep schedule, auto-launch, installers

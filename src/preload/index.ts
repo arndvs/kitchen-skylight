@@ -1,6 +1,17 @@
 import { contextBridge, ipcRenderer } from 'electron'
 
-const ALLOWED_INVOKE_PREFIXES = ['app:', 'settings:', 'people:', 'calendars:', 'events:', 'google:', 'ics:', 'sync:']
+const ALLOWED_INVOKE_PREFIXES = [
+  'app:',
+  'settings:',
+  'people:',
+  'calendars:',
+  'events:',
+  'google:',
+  'ics:',
+  'sync:',
+  'weather:',
+  'auth:'
+]
 const PUSH_PREFIX = 'push:'
 
 export interface OslBridge {

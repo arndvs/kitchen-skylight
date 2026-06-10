@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react'
 import { DateTime } from 'luxon'
-import { usePeople, useSettings } from '../../api/hooks'
+import { useAuthMutations, useAuthStatus, usePeople, useSettings } from '../../api/hooks'
 import { useUi, ZONE } from '../../stores/uiStore'
 import { SegmentedControl, IconButton } from '../../components/ui'
 import { ChevronLeftIcon, ChevronRightIcon, GearIcon, PlusIcon } from '../../components/icons'
+import { PinDialog } from '../../components/PinDialog'
+import { WeatherButton } from '../weather/WeatherHeader'
 import { initials, textOn } from '../../lib/format'
 import type { CalendarViewKind } from '@shared/types'
 
@@ -44,6 +46,19 @@ export function Header() {
   const setSettingsOpen = useUi((s) => s.setSettingsOpen)
   const weekStartsOn = settings?.weekStartsOn ?? 0
   const timeFormat = settings?.timeFormat ?? '12h'
+  const { data: auth } = useAuthStatus()
+  const authMutations = useAuthMutations()
+  const [pinPrompt, setPinPrompt] = useState(false)
+  const [pinError, setPinError] = useState<string | null>(null)
+
+  const openSettings = (): void => {
+    if (auth?.pinSet && !auth.unlocked) {
+      setPinError(null)
+      setPinPrompt(true)
+    } else {
+      setSettingsOpen(true)
+    }
+  }
 
   return (
     <header className="flex items-center gap-5 px-6 pt-5 pb-4">
@@ -58,6 +73,8 @@ export function Header() {
           {timeFormat === '24h' ? now.toFormat('HH:mm') : now.toFormat('h:mm a').toLowerCase()}
         </div>
       </button>
+
+      <WeatherButton />
 
       <div className="flex-1" />
 
@@ -120,9 +137,31 @@ export function Header() {
         ]}
       />
 
-      <IconButton label="Settings" onClick={() => setSettingsOpen(true)}>
+      <IconButton label="Settings" onClick={openSettings}>
         <GearIcon size={26} />
       </IconButton>
+
+      <PinDialog
+        open={pinPrompt}
+        title="Enter parent PIN"
+        error={pinError}
+        onClose={() => setPinPrompt(false)}
+        onSubmit={(pin) =>
+          authMutations.verifyPin.mutate(
+            { pin },
+            {
+              onSuccess: (res) => {
+                if (res.valid) {
+                  setPinPrompt(false)
+                  setSettingsOpen(true)
+                } else {
+                  setPinError('Wrong PIN — try again')
+                }
+              }
+            }
+          )
+        }
+      />
     </header>
   )
 }

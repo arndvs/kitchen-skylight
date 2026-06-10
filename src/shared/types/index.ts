@@ -151,6 +151,7 @@ export interface AppSettings {
   weekStartsOn: 0 | 1
   defaultView: CalendarViewKind
   timeFormat: '12h' | '24h'
+  temperatureUnit: 'f' | 'c'
   weather: { lat: number; lon: number; label: string } | null
   sleep: { enabled: boolean; start: string; end: string }
   screensaver: { folder: string | null; idleMinutes: number }
@@ -160,6 +161,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   weekStartsOn: 0,
   defaultView: 'week',
   timeFormat: '12h',
+  temperatureUnit: 'f',
   weather: null,
   sleep: { enabled: false, start: '21:30', end: '06:30' },
   screensaver: { folder: null, idleMinutes: 10 }

@@ -25,6 +25,8 @@ import {
   useSyncStatus
 } from '../../api/hooks'
 import { PinDialog } from '../../components/PinDialog'
+import { TimeField } from '../../components/DateTimePickers'
+import { ipcInvoke } from '../../api/client'
 import { useUi } from '../../stores/uiStore'
 import { BigButton, Dialog, FieldLabel, SegmentedControl, Sheet, Toggle } from '../../components/ui'
 import { OskInput } from '../../components/Osk'
@@ -933,6 +935,103 @@ function ParentalLockSection() {
   )
 }
 
+function minutesToHhMm(minutes: number): string {
+  return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
+}
+
+function hhMmToMinutes(s: string): number {
+  const [h, m] = s.split(':').map(Number)
+  return (h || 0) * 60 + (m || 0)
+}
+
+function ScreensaverSection() {
+  const { data: settings } = useSettings()
+  const mutation = useSettingsMutation()
+  if (!settings) return null
+  const ss = settings.screensaver
+
+  const pickFolder = async (): Promise<void> => {
+    await ipcInvoke('screensaver:pickFolder', undefined)
+    // folder is stored main-side; refresh settings
+    mutation.mutate({})
+  }
+
+  return (
+    <div>
+      <FieldLabel>Photo screensaver</FieldLabel>
+      <div className="flex flex-col gap-3 rounded-2xl bg-paper-deep/50 p-4">
+        <div className="flex items-center gap-3">
+          <span className="min-w-0 flex-1 truncate text-base font-bold text-ink-soft">
+            {ss.folder ?? 'No photo folder chosen'}
+          </span>
+          <button
+            type="button"
+            onClick={() => void pickFolder()}
+            className="pressable rounded-full border-2 border-line bg-card px-4 py-1.5 text-sm font-bold text-ink-soft"
+          >
+            Choose folder
+          </button>
+        </div>
+        <div className="flex items-end gap-6">
+          <div>
+            <FieldLabel>Starts after (minutes idle)</FieldLabel>
+            <Stepper
+              value={ss.idleMinutes}
+              min={1}
+              max={120}
+              onChange={(idleMinutes) => mutation.mutate({ screensaver: { ...ss, idleMinutes } })}
+            />
+          </div>
+          <div className="flex-1" />
+          <BigButton
+            variant="ghost"
+            disabled={!ss.folder}
+            onClick={() => void ipcInvoke('kiosk:previewScreensaver', undefined)}
+          >
+            Preview
+          </BigButton>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SleepSection() {
+  const { data: settings } = useSettings()
+  const mutation = useSettingsMutation()
+  if (!settings) return null
+  const sleep = settings.sleep
+  return (
+    <div>
+      <FieldLabel>Sleep schedule</FieldLabel>
+      <div className="flex flex-col gap-3 rounded-2xl bg-paper-deep/50 p-4">
+        <div className="flex items-center gap-3">
+          <span className="flex-1 text-base font-semibold text-ink-soft">
+            Turn the screen dark overnight; tap to wake.
+          </span>
+          <Toggle checked={sleep.enabled} onChange={(enabled) => mutation.mutate({ sleep: { ...sleep, enabled } })} label="Sleep mode" />
+        </div>
+        {sleep.enabled && (
+          <div className="grid grid-cols-2 gap-4">
+            <TimeField
+              label="Sleep at"
+              minutes={hhMmToMinutes(sleep.start)}
+              timeFormat={settings.timeFormat}
+              onChange={(m) => mutation.mutate({ sleep: { ...sleep, start: minutesToHhMm(m) } })}
+            />
+            <TimeField
+              label="Wake at"
+              minutes={hhMmToMinutes(sleep.end)}
+              timeFormat={settings.timeFormat}
+              onChange={(m) => mutation.mutate({ sleep: { ...sleep, end: minutesToHhMm(m) } })}
+            />
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
 function GeneralTab() {
   const { data: settings } = useSettings()
   const mutation = useSettingsMutation()
@@ -940,6 +1039,8 @@ function GeneralTab() {
   return (
     <div className="flex max-w-xl flex-col gap-6">
       <WeatherSection />
+      <ScreensaverSection />
+      <SleepSection />
       <ParentalLockSection />
       <div>
         <FieldLabel>Week starts on</FieldLabel>
@@ -963,9 +1064,16 @@ function GeneralTab() {
           ]}
         />
       </div>
-      <p className="text-sm font-semibold text-ink-faint">
-        Sleep schedule and the photo screensaver arrive in upcoming milestones.
-      </p>
+      <div className="flex items-center gap-3 rounded-2xl bg-paper-deep/50 p-4">
+        <span className="flex-1 text-base font-semibold text-ink-soft">
+          Launch OpenSkyLight when the computer starts (installed app only)
+        </span>
+        <Toggle
+          checked={settings.launchOnStartup}
+          onChange={(launchOnStartup) => mutation.mutate({ launchOnStartup })}
+          label="Launch on startup"
+        />
+      </div>
     </div>
   )
 }

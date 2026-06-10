@@ -121,6 +121,10 @@ export type IpcContract = {
   }
   'weather:searchCity': { req: { query: string }; res: { label: string; lat: number; lon: number }[] }
 
+  'screensaver:pickFolder': { req: void; res: { folder: string | null } }
+  'screensaver:listPhotos': { req: void; res: string[] }
+  'kiosk:previewScreensaver': { req: void; res: void }
+
   'auth:getStatus': { req: void; res: { pinSet: boolean; unlocked: boolean } }
   'auth:verifyPin': { req: { pin: string }; res: { valid: boolean } }
   'auth:setPin': { req: { pin: string | null }; res: void }
@@ -164,7 +168,9 @@ export const ALLOWED_CHANNEL_PREFIXES = [
   'rewards:',
   'lists:',
   'listItems:',
-  'meals:'
+  'meals:',
+  'screensaver:',
+  'kiosk:'
 ] as const
 
 /** Envelope used for every invoke result so errors cross the bridge cleanly. */

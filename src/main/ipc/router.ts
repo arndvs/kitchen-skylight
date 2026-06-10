@@ -19,6 +19,7 @@ import type { ChoresService } from '../services/choresService'
 import type { RewardsService } from '../services/rewardsService'
 import type { ListsService } from '../services/listsService'
 import type { MealsService } from '../services/mealsService'
+import type { Kiosk } from '../kiosk/kiosk'
 
 export interface Services {
   settings: SettingsService
@@ -35,6 +36,7 @@ export interface Services {
   rewards: RewardsService
   lists: ListsService
   meals: MealsService
+  kiosk: Kiosk
 }
 
 /**
@@ -61,7 +63,8 @@ const PARENT_GATED: Set<IpcChannel> = new Set([
   'rewards:create',
   'rewards:update',
   'rewards:delete',
-  'rewards:grant'
+  'rewards:grant',
+  'screensaver:pickFolder'
 ])
 
 /** Channels that mutate data, mapped to the domain the renderer should refetch. */
@@ -122,7 +125,11 @@ export function registerIpcHandlers(services: Services): void {
   }))
 
   handle('settings:getAll', null, () => services.settings.getAll())
-  handle('settings:set', s.settingsPatchSchema, (req) => services.settings.set(req.patch))
+  handle('settings:set', s.settingsPatchSchema, (req) => {
+    const result = services.settings.set(req.patch)
+    if (req.patch.launchOnStartup !== undefined) services.kiosk.setLaunchOnStartup(req.patch.launchOnStartup)
+    return result
+  })
 
   handle('people:list', null, () => services.people.list())
   handle('people:create', s.personCreateSchema, (req) => services.people.create(req))
@@ -209,6 +216,10 @@ export function registerIpcHandlers(services: Services): void {
 
   handle('weather:get', null, () => services.weather.get())
   handle('weather:searchCity', s.citySearchSchema, (req) => services.weather.searchCity(req.query))
+
+  handle('screensaver:pickFolder', null, () => services.kiosk.pickFolder())
+  handle('screensaver:listPhotos', null, () => services.kiosk.listPhotos())
+  handle('kiosk:previewScreensaver', null, () => services.kiosk.previewScreensaver())
 
   handle('auth:getStatus', null, () => ({
     pinSet: services.auth.pinSet(),

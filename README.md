@@ -4,7 +4,7 @@ An open-source, fully standalone family calendar display — a [Skylight Calenda
 
 ## Status
 
-**M0 – M5 complete** — calendar, sync, weather, parental lock, chores & rewards, lists & meals:
+**All planned milestones (M0 – M6) complete**:
 
 - Week / Day / Month / Agenda (List) views, touch-first with ≥48px targets
 - Family member profiles with per-person colors and filter chips
@@ -30,6 +30,13 @@ An open-source, fully standalone family calendar display — a [Skylight Calenda
   tap-to-check items, clear-done, shared by the whole family
 - **Meal planning**: breakfast/lunch/dinner/snack per day, edited from a tap on
   the meal strip in the Week and Day views
+- **Photo screensaver**: point it at a folder of family photos; after the
+  configured idle time it crossfades through them with a clock overlay (photos
+  are served through a sandbox-safe custom protocol, never direct file access)
+- **Sleep schedule**: the screen goes dark on a nightly window (overnight
+  ranges supported), the display power-save blocker is released so the OS can
+  power the panel down, and a tap wakes it for five minutes
+- Launch-on-startup toggle, single-instance lock, crash auto-relaunch
 - Built-in on-screen keyboard (no reliance on the Windows touch keyboard)
 - Warm "paper planner" visual design (Fraunces + Nunito, linen + ember palette)
 
@@ -41,10 +48,20 @@ An open-source, fully standalone family calendar display — a [Skylight Calenda
 4. In the app: Settings → Calendars → paste the client ID + secret → Save & connect
 5. Sign in via the browser window that opens, then choose which calendars to sync
 
-### Roadmap
+### Ideas for later
 
-- **M6** — Photo screensaver, sleep schedule, auto-launch, installers
-- Later: recipe storage, drag-to-reorder lists, AI imports (Magic Import-style)
+Recipe storage, drag-to-reorder lists, portrait-layout pass, hard panel
+power-off via the Win32 API, AI imports (Magic Import-style), companion
+mobile/web access.
+
+## Kiosk setup (Windows)
+
+1. `npm run dist`, then run the installer from `dist/` on the kiosk machine
+2. In the app: Settings → General → enable **Launch on startup**
+3. Windows Settings: set power options so the OS never sleeps (the app manages
+   display dimming through its own sleep schedule), enable auto-login
+4. The installed app runs fullscreen kiosk by default; launch with
+   `OpenSkyLight.exe --windowed` if you ever need a window
 
 ## Development
 

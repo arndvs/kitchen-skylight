@@ -253,6 +253,7 @@ export interface AppSettings {
   weather: { lat: number; lon: number; label: string } | null
   sleep: { enabled: boolean; start: string; end: string }
   screensaver: { folder: string | null; idleMinutes: number }
+  launchOnStartup: boolean
 }
 
 export const DEFAULT_SETTINGS: AppSettings = {
@@ -262,7 +263,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   temperatureUnit: 'f',
   weather: null,
   sleep: { enabled: false, start: '21:30', end: '06:30' },
-  screensaver: { folder: null, idleMinutes: 10 }
+  screensaver: { folder: null, idleMinutes: 10 },
+  launchOnStartup: false
 }
 
 /** Touch-friendly person color palette (Skylight-style) */

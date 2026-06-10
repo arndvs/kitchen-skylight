@@ -10,6 +10,7 @@ import { ChoresView } from './features/chores/ChoresView'
 import { ListsView } from './features/lists/ListsView'
 import { EventEditor } from './features/calendar/EventEditor'
 import { SettingsSheet } from './features/settings/SettingsSheet'
+import { KioskOverlays } from './features/kiosk/KioskOverlays'
 import { OskTray } from './components/Osk'
 
 export default function App() {
@@ -32,6 +33,7 @@ export default function App() {
       <SettingsSheet />
       <OskTray />
       <Toasts />
+      <KioskOverlays />
     </div>
   )
 }

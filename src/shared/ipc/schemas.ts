@@ -91,7 +91,8 @@ export const settingsPatchSchema = z.object({
       temperatureUnit: z.enum(['f', 'c']).optional(),
       weather: z.object({ lat: z.number(), lon: z.number(), label: z.string() }).nullable().optional(),
       sleep: z.object({ enabled: z.boolean(), start: z.string(), end: z.string() }).optional(),
-      screensaver: z.object({ folder: z.string().nullable(), idleMinutes: z.number().int().min(1).max(120) }).optional()
+      screensaver: z.object({ folder: z.string().nullable(), idleMinutes: z.number().int().min(1).max(120) }).optional(),
+      launchOnStartup: z.boolean().optional()
     })
     .strict()
 })

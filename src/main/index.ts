@@ -14,6 +14,7 @@ import { createChoresService } from './services/choresService'
 import { createRewardsService } from './services/rewardsService'
 import { createListsService } from './services/listsService'
 import { createMealsService } from './services/mealsService'
+import { createKiosk } from './kiosk/kiosk'
 import { createGoogleAuth } from './sync/googleAuth'
 import { createGoogleSync } from './sync/googleSync'
 import { createOutboxWorker } from './sync/outboxWorker'
@@ -42,6 +43,7 @@ if (!gotLock) {
     const deviceTz = (): string => DateTime.local().zoneName ?? 'UTC'
 
     const settings = createSettingsService(db)
+    const kiosk = createKiosk({ settings, broadcast })
     const choresService = createChoresService(db, deviceTz)
     const googleAuth = createGoogleAuth(db, settings)
     const googleSync = createGoogleSync({ db, auth: googleAuth, deviceTz })
@@ -74,10 +76,12 @@ if (!gotLock) {
       chores: choresService,
       rewards: createRewardsService(db, choresService),
       lists: createListsService(db),
-      meals: createMealsService(db)
+      meals: createMealsService(db),
+      kiosk
     })
     createMainWindow()
     syncManager.start()
+    kiosk.start()
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createMainWindow()

@@ -4,19 +4,31 @@ An open-source, fully standalone family calendar display — a [Skylight Calenda
 
 ## Status
 
-**M0 + M1 complete** — a usable local family calendar:
+**M0 + M1 + M2 complete** — a usable family calendar with external sync:
 
 - Week / Day / Month / Agenda (List) views, touch-first with ≥48px targets
 - Family member profiles with per-person colors and filter chips
 - Local calendars with full event create/edit/delete from the screen
 - Recurring events (daily/weekly/monthly/yearly, weekday picker, end date) with
   Google-style **this / this-and-following / all** edit and delete scopes
+- **Two-way Google Calendar sync**: loopback OAuth with PKCE (your own free
+  Google Cloud credentials), incremental pull with sync tokens (60s polling),
+  push of local edits with If-Match etags and last-writer-wins conflict
+  resolution, person assignments round-tripped via extended properties
+- **ICS feed subscriptions** (read-only, conditional GET, 30-minute refresh)
 - Built-in on-screen keyboard (no reliance on the Windows touch keyboard)
 - Warm "paper planner" visual design (Fraunces + Nunito, linen + ember palette)
 
+### Connecting Google Calendar
+
+1. Create a free Google Cloud project, enable the **Google Calendar API**
+2. Configure an OAuth consent screen (External, add yourself as a test user)
+3. Create an OAuth client of type **Desktop app**
+4. In the app: Settings → Calendars → paste the client ID + secret → Save & connect
+5. Sign in via the browser window that opens, then choose which calendars to sync
+
 ### Roadmap
 
-- **M2** — Two-way Google Calendar sync (your own OAuth credentials), ICS feeds
 - **M3** — Weather header (Open-Meteo), full settings, parental PIN lock
 - **M4** — Chores, routines, star rewards
 - **M5** — Lists, recipes, meal planning

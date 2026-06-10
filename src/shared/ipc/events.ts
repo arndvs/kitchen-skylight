@@ -2,6 +2,7 @@
 export type MainPushEvents = {
   'push:dataChanged': { domain: 'events' | 'people' | 'calendars' | 'settings' }
   'push:syncStatus': { state: 'idle' | 'syncing' | 'error'; message?: string }
+  'push:syncConflict': { title: string }
   'push:kioskIdle': { state: 'active' | 'screensaver' }
   'push:sleepState': { sleeping: boolean }
 }

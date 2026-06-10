@@ -9,12 +9,20 @@ import type { SettingsService } from '../services/settingsService'
 import type { PeopleService } from '../services/peopleService'
 import type { CalendarService } from '../services/calendarService'
 import type { EventService } from '../services/eventService'
+import type { GoogleAuth } from '../sync/googleAuth'
+import type { GoogleSync } from '../sync/googleSync'
+import type { IcsSync } from '../sync/icsSync'
+import type { SyncManager } from '../sync/scheduler'
 
 export interface Services {
   settings: SettingsService
   people: PeopleService
   calendars: CalendarService
   events: EventService
+  googleAuth: GoogleAuth
+  googleSync: GoogleSync
+  icsSync: IcsSync
+  syncManager: SyncManager
 }
 
 /** Channels that mutate data, mapped to the domain the renderer should refetch. */
@@ -28,10 +36,14 @@ const MUTATION_DOMAINS: Partial<Record<IpcChannel, 'events' | 'people' | 'calend
   'calendars:delete': 'calendars',
   'events:create': 'events',
   'events:update': 'events',
-  'events:delete': 'events'
+  'events:delete': 'events',
+  'google:connect': 'calendars',
+  'google:disconnect': 'calendars',
+  'google:setCalendarSelected': 'calendars',
+  'ics:add': 'calendars'
 }
 
-function broadcast(channel: string, payload: unknown): void {
+export function broadcast(channel: string, payload: unknown): void {
   for (const win of BrowserWindow.getAllWindows()) {
     win.webContents.send(channel, payload)
   }
@@ -87,4 +99,41 @@ export function registerIpcHandlers(services: Services): void {
   handle('events:create', s.eventCreateSchema, (req) => services.events.create(req))
   handle('events:update', s.eventUpdateSchema, (req) => services.events.update(req))
   handle('events:delete', s.eventDeleteSchema, (req) => services.events.remove(req))
+
+  handle('google:getStatus', null, () => ({
+    configured: services.googleAuth.isConfigured(),
+    accounts: services.googleAuth.listAccounts()
+  }))
+  handle('google:setCredentials', s.googleCredentialsSchema, (req) =>
+    services.googleAuth.setCredentials(req.clientId, req.clientSecret)
+  )
+  handle('google:connect', null, async () => {
+    const result = await services.googleAuth.connect()
+    services.syncManager.syncNow()
+    return result
+  })
+  handle('google:disconnect', s.accountIdSchema, (req) => services.googleAuth.disconnect(req.accountId))
+  handle('google:listRemoteCalendars', s.accountIdSchema, (req) =>
+    services.googleSync.listRemoteCalendars(req.accountId)
+  )
+  handle('google:setCalendarSelected', s.googleCalendarSelectSchema, (req) => {
+    services.googleSync.setCalendarSelected(req)
+    if (req.selected) services.syncManager.syncNow()
+  })
+
+  handle('ics:add', s.icsAddSchema, (req) => {
+    const row = services.icsSync.addFeed(req)
+    services.syncManager.syncNow()
+    return {
+      id: row.id,
+      provider: row.provider,
+      name: row.name,
+      color: row.color,
+      readOnly: row.readOnly,
+      visible: row.visible
+    }
+  })
+
+  handle('sync:now', null, () => services.syncManager.syncNow())
+  handle('sync:getStatus', null, () => services.syncManager.getStatus())
 }

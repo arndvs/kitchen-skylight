@@ -4,10 +4,16 @@ import { PERSON_COLORS } from '@shared/types'
 import {
   useCalendarMutations,
   useCalendars,
+  useGoogleMutations,
+  useGoogleStatus,
+  useIcsMutations,
   usePeople,
   usePeopleMutations,
+  useRemoteCalendars,
   useSettings,
-  useSettingsMutation
+  useSettingsMutation,
+  useSyncNow,
+  useSyncStatus
 } from '../../api/hooks'
 import { useUi } from '../../stores/uiStore'
 import { BigButton, Dialog, FieldLabel, SegmentedControl, Sheet, Toggle } from '../../components/ui'
@@ -164,12 +170,185 @@ function FamilyTab() {
   )
 }
 
+function SyncStatusRow() {
+  const { data: status } = useSyncStatus()
+  const syncNow = useSyncNow()
+  if (!status) return null
+  const dot = status.state === 'error' ? 'bg-ember' : status.state === 'syncing' ? 'bg-sun' : 'bg-[#46A758]'
+  const label =
+    status.state === 'syncing' ? 'Syncing…' : status.state === 'error' ? (status.lastError ?? 'Sync error') : 'Up to date'
+  return (
+    <div className="flex items-center gap-3 rounded-2xl bg-paper-deep/50 px-4 py-3">
+      <span className={`h-3.5 w-3.5 rounded-full ${dot}`} />
+      <span className="min-w-0 flex-1 truncate text-base font-bold text-ink-soft">{label}</span>
+      <button
+        type="button"
+        onClick={() => syncNow.mutate(undefined)}
+        className="pressable rounded-full border-2 border-line bg-card px-4 py-1.5 text-sm font-bold text-ink-soft"
+      >
+        Sync now
+      </button>
+    </div>
+  )
+}
+
+function GoogleSection() {
+  const { data: status } = useGoogleStatus()
+  const google = useGoogleMutations()
+  const [clientId, setClientId] = useState('')
+  const [clientSecret, setClientSecret] = useState('')
+  const [expandedAccount, setExpandedAccount] = useState<string | null>(null)
+  const { data: remoteCals = [], isLoading: remoteLoading } = useRemoteCalendars(expandedAccount)
+
+  if (!status) return null
+
+  const saveAndConnect = (): void => {
+    google.setCredentials.mutate(
+      { clientId, clientSecret },
+      { onSuccess: () => google.connect.mutate(undefined) }
+    )
+  }
+
+  return (
+    <div>
+      <FieldLabel>Google Calendar</FieldLabel>
+      {!status.configured ? (
+        <div className="flex flex-col gap-3 rounded-2xl bg-paper-deep/50 p-4">
+          <p className="text-base font-semibold text-ink-soft">
+            Two-way sync uses your own (free) Google Cloud project. Create a{' '}
+            <span className="font-extrabold">Desktop app</span> OAuth client in the Google Cloud console, enable the
+            Calendar API, and paste the credentials here.
+          </p>
+          <OskInput value={clientId} onChange={setClientId} placeholder="OAuth client ID" />
+          <OskInput value={clientSecret} onChange={setClientSecret} placeholder="OAuth client secret" />
+          <BigButton onClick={saveAndConnect} disabled={clientId.trim().length < 10 || clientSecret.trim().length < 5}>
+            {google.connect.isPending ? 'Waiting for browser sign-in…' : 'Save & connect Google'}
+          </BigButton>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-3">
+          {status.accounts.map((account) => (
+            <div key={account.id} className="rounded-2xl bg-paper-deep/50 p-3">
+              <div className="flex items-center gap-3">
+                <span className="flex-1">
+                  <span className="block text-lg font-bold">{account.email}</span>
+                  {account.error && <span className="block text-sm font-bold text-ember-deep">{account.error}</span>}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setExpandedAccount(expandedAccount === account.id ? null : account.id)}
+                  className="pressable rounded-full border-2 border-line bg-card px-4 py-1.5 text-sm font-bold text-ink-soft"
+                >
+                  {expandedAccount === account.id ? 'Hide calendars' : 'Choose calendars'}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => google.disconnect.mutate({ accountId: account.id })}
+                  className="pressable rounded-full border-2 border-ember-soft px-4 py-1.5 text-sm font-bold text-ember-deep"
+                >
+                  Disconnect
+                </button>
+              </div>
+              {expandedAccount === account.id && (
+                <div className="mt-3 flex flex-col gap-2">
+                  {remoteLoading && <p className="text-sm font-bold text-ink-faint">Loading calendars…</p>}
+                  {remoteCals.map((rc) => (
+                    <div key={rc.id} className="flex items-center gap-3 rounded-xl bg-card px-3 py-2">
+                      <span className="h-5 w-5 rounded-full" style={{ backgroundColor: rc.color }} />
+                      <span className="min-w-0 flex-1 truncate text-base font-bold">
+                        {rc.name}
+                        {rc.readOnly && <span className="ml-2 text-xs font-extrabold text-ink-faint">READ-ONLY</span>}
+                      </span>
+                      <Toggle
+                        checked={rc.selected}
+                        onChange={(selected) =>
+                          google.setCalendarSelected.mutate({
+                            accountId: account.id,
+                            googleCalendarId: rc.id,
+                            name: rc.name,
+                            color: rc.color,
+                            readOnly: rc.readOnly,
+                            selected
+                          })
+                        }
+                        label={`Sync ${rc.name}`}
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          ))}
+          <BigButton variant="ghost" onClick={() => google.connect.mutate(undefined)} disabled={google.connect.isPending}>
+            {google.connect.isPending ? 'Waiting for browser sign-in…' : 'Add Google account'}
+          </BigButton>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function IcsSection() {
+  const { data: calendars = [] } = useCalendars()
+  const calendarMutations = useCalendarMutations()
+  const ics = useIcsMutations()
+  const [url, setUrl] = useState('')
+  const [name, setName] = useState('')
+  const feeds = calendars.filter((c) => c.provider === 'ics')
+
+  const add = (): void => {
+    ics.add.mutate(
+      { url: url.trim(), name: name.trim() || 'Subscribed calendar', color: PERSON_COLORS[9] },
+      {
+        onSuccess: () => {
+          setUrl('')
+          setName('')
+        }
+      }
+    )
+  }
+
+  return (
+    <div>
+      <FieldLabel>Subscribed feeds (ICS)</FieldLabel>
+      <div className="flex flex-col gap-2">
+        {feeds.map((c) => (
+          <div key={c.id} className="flex items-center gap-3 rounded-2xl bg-paper-deep/50 p-3">
+            <span className="h-6 w-6 rounded-full" style={{ backgroundColor: c.color }} />
+            <span className="min-w-0 flex-1 truncate text-lg font-bold">{c.name}</span>
+            <Toggle
+              checked={c.visible}
+              onChange={(visible) => calendarMutations.update.mutate({ id: c.id, visible })}
+              label="Visible"
+            />
+            <button
+              type="button"
+              onClick={() => calendarMutations.remove.mutate({ id: c.id })}
+              className="pressable rounded-full border-2 border-ember-soft px-4 py-1.5 text-sm font-bold text-ember-deep"
+            >
+              Remove
+            </button>
+          </div>
+        ))}
+        <div className="flex flex-col gap-2 rounded-2xl bg-paper-deep/50 p-3 sm:flex-row">
+          <OskInput value={url} onChange={setUrl} placeholder="https://… .ics feed URL" className="flex-[2]" />
+          <OskInput value={name} onChange={setName} placeholder="Name" className="flex-1" />
+          <BigButton variant="ghost" onClick={add} disabled={!/^https?:\/\/.+/.test(url.trim()) || ics.add.isPending}>
+            Add
+          </BigButton>
+        </div>
+      </div>
+    </div>
+  )
+}
+
 function CalendarsTab() {
   const { data: calendars = [] } = useCalendars()
   const mutations = useCalendarMutations()
   const [editing, setEditing] = useState<CalendarDto | 'new' | null>(null)
   const [name, setName] = useState('')
   const [color, setColor] = useState<string>(PERSON_COLORS[5])
+  const manageable = calendars.filter((c) => c.provider !== 'ics')
 
   const openEditor = (c: CalendarDto | 'new'): void => {
     setEditing(c)
@@ -185,27 +364,40 @@ function CalendarsTab() {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      {calendars.map((c) => (
-        <div key={c.id} className="flex items-center gap-4 rounded-2xl bg-paper-deep/50 p-3">
-          <button type="button" onClick={() => openEditor(c)} className="pressable flex flex-1 items-center gap-4 text-left">
-            <span className="h-8 w-8 rounded-full" style={{ backgroundColor: c.color }} />
-            <span className="flex-1">
-              <span className="block text-xl font-bold">{c.name}</span>
-              <span className="block text-sm font-bold text-ink-faint capitalize">{c.provider}</span>
+    <div className="flex flex-col gap-6">
+      <SyncStatusRow />
+      <GoogleSection />
+      <IcsSection />
+      <div>
+        <FieldLabel>Calendars on this display</FieldLabel>
+        <div className="flex flex-col gap-2">
+          {manageable.map((c) => (
+            <div key={c.id} className="flex items-center gap-4 rounded-2xl bg-paper-deep/50 p-3">
+              <button
+                type="button"
+                onClick={() => openEditor(c)}
+                className="pressable flex flex-1 items-center gap-4 text-left"
+              >
+                <span className="h-8 w-8 rounded-full" style={{ backgroundColor: c.color }} />
+                <span className="flex-1">
+                  <span className="block text-xl font-bold">{c.name}</span>
+                  <span className="block text-sm font-bold text-ink-faint capitalize">{c.provider}</span>
+                </span>
+              </button>
+              <Toggle
+                checked={c.visible}
+                onChange={(visible) => mutations.update.mutate({ id: c.id, visible })}
+                label="Visible"
+              />
+            </div>
+          ))}
+          <BigButton variant="ghost" onClick={() => openEditor('new')}>
+            <span className="flex items-center justify-center gap-2">
+              <PlusIcon size={20} /> Add local calendar
             </span>
-          </button>
-          <Toggle checked={c.visible} onChange={(visible) => mutations.update.mutate({ id: c.id, visible })} label="Visible" />
+          </BigButton>
         </div>
-      ))}
-      <BigButton variant="ghost" onClick={() => openEditor('new')}>
-        <span className="flex items-center justify-center gap-2">
-          <PlusIcon size={20} /> Add local calendar
-        </span>
-      </BigButton>
-      <p className="px-1 text-sm font-semibold text-ink-faint">
-        Google Calendar sync and ICS feeds are coming in the next milestone.
-      </p>
+      </div>
 
       <Dialog open={editing !== null} onClose={() => setEditing(null)} title={editing === 'new' ? 'Add calendar' : 'Edit calendar'}>
         <div className="flex flex-col gap-4">

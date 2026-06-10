@@ -18,8 +18,11 @@
     "dist": "electron-vite build && electron-builder"
   },
   "dependencies": {
+    "@googleapis/calendar": "^15.0.0",
     "better-sqlite3": "^12.4.1",
     "drizzle-orm": "^0.38.4",
+    "google-auth-library": "^10.7.0",
+    "ical.js": "^2.2.1",
     "luxon": "^3.5.0",
     "rrule": "^2.8.1",
     "zod": "^3.24.1"

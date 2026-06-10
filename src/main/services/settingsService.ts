@@ -7,7 +7,10 @@ export function createSettingsService(db: AppDb) {
   function getAll(): AppSettings {
     const rows = db.select().from(settings).all()
     const stored: Record<string, unknown> = {}
+    const known = new Set(Object.keys(DEFAULT_SETTINGS))
     for (const row of rows) {
+      // internal keys (e.g. encrypted Google credentials) never cross to the renderer
+      if (!known.has(row.key)) continue
       try {
         stored[row.key] = JSON.parse(row.value)
       } catch {
@@ -15,6 +18,18 @@ export function createSettingsService(db: AppDb) {
       }
     }
     return { ...DEFAULT_SETTINGS, ...stored } as AppSettings
+  }
+
+  /** Raw access for internal (non-renderer) keys like encrypted credentials. */
+  function getRaw(key: string): string | null {
+    const [row] = db.select().from(settings).where(eq(settings.key, key)).all()
+    return row?.value ?? null
+  }
+
+  function setRaw(key: string, value: string): void {
+    const existing = db.select().from(settings).where(eq(settings.key, key)).all()
+    if (existing.length > 0) db.update(settings).set({ value }).where(eq(settings.key, key)).run()
+    else db.insert(settings).values({ key, value }).run()
   }
 
   function set(patch: Partial<AppSettings>): AppSettings {
@@ -33,7 +48,7 @@ export function createSettingsService(db: AppDb) {
     return getAll()
   }
 
-  return { getAll, set }
+  return { getAll, set, getRaw, setRaw }
 }
 
 export type SettingsService = ReturnType<typeof createSettingsService>

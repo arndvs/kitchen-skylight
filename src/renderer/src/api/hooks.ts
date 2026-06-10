@@ -99,14 +99,88 @@ export function useSettingsMutation() {
   )
 }
 
+export function useGoogleStatus() {
+  return useQuery({ queryKey: ['googleStatus'], queryFn: () => ipcInvoke('google:getStatus', undefined) })
+}
+
+export function useRemoteCalendars(accountId: string | null) {
+  return useQuery({
+    queryKey: ['remoteCalendars', accountId],
+    queryFn: () => ipcInvoke('google:listRemoteCalendars', { accountId: accountId! }),
+    enabled: accountId !== null,
+    staleTime: 60_000
+  })
+}
+
+export function useSyncStatus() {
+  return useQuery({
+    queryKey: ['syncStatus'],
+    queryFn: () => ipcInvoke('sync:getStatus', undefined),
+    refetchInterval: 15_000
+  })
+}
+
+export function useGoogleMutations() {
+  const calendarKeys = [['googleStatus'], ['remoteCalendars'], ['calendars'], ['occurrences'], ['syncStatus']]
+  return {
+    setCredentials: useInvalidatingMutation(
+      (input: { clientId: string; clientSecret: string }) => ipcInvoke('google:setCredentials', input),
+      [['googleStatus']]
+    ),
+    connect: useInvalidatingMutation(() => ipcInvoke('google:connect', undefined), calendarKeys),
+    disconnect: useInvalidatingMutation(
+      (input: { accountId: string }) => ipcInvoke('google:disconnect', input),
+      calendarKeys
+    ),
+    setCalendarSelected: useInvalidatingMutation(
+      (input: {
+        accountId: string
+        googleCalendarId: string
+        name: string
+        color: string
+        readOnly: boolean
+        selected: boolean
+      }) => ipcInvoke('google:setCalendarSelected', input),
+      calendarKeys
+    )
+  }
+}
+
+export function useIcsMutations() {
+  return {
+    add: useInvalidatingMutation(
+      (input: { url: string; name: string; color: string }) => ipcInvoke('ics:add', input),
+      [['calendars'], ['occurrences'], ['syncStatus']]
+    )
+  }
+}
+
+export function useSyncNow() {
+  return useInvalidatingMutation(() => ipcInvoke('sync:now', undefined), [['syncStatus']])
+}
+
 /** Refetch when the main process announces data changes (sync engine, other windows). */
 export function usePushInvalidation(): void {
   const queryClient = useQueryClient()
+  const pushToast = useToasts((s) => s.push)
   useEffect(() => {
-    return window.osl.on('push:dataChanged', (data) => {
+    const offData = window.osl.on('push:dataChanged', (data) => {
       const domain = (data as { domain?: string })?.domain
       if (domain === 'events') void queryClient.invalidateQueries({ queryKey: ['occurrences'] })
       else if (domain) void queryClient.invalidateQueries({ queryKey: [domain] })
+      if (domain === 'calendars') void queryClient.invalidateQueries({ queryKey: ['occurrences'] })
     })
-  }, [queryClient])
+    const offStatus = window.osl.on('push:syncStatus', () => {
+      void queryClient.invalidateQueries({ queryKey: ['syncStatus'] })
+    })
+    const offConflict = window.osl.on('push:syncConflict', (data) => {
+      const title = (data as { title?: string })?.title ?? 'An event'
+      pushToast(`"${title}" was changed elsewhere — showing the latest version`)
+    })
+    return () => {
+      offData()
+      offStatus()
+      offConflict()
+    }
+  }, [queryClient, pushToast])
 }

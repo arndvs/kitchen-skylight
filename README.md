@@ -54,6 +54,22 @@ Recipe storage, drag-to-reorder lists, portrait-layout pass, hard panel
 power-off via the Win32 API, AI imports (Magic Import-style), companion
 mobile/web access.
 
+## Releases and auto-update
+
+Installed apps check GitHub Releases every 6 hours (and shortly after boot).
+Updates download in the background, show a "Restart now" pill on the display,
+and install themselves silently at 03:30 if nobody taps it.
+
+To ship a release:
+
+```bash
+npm version patch        # or minor/major — bumps package.json and creates the tag
+git push --follow-tags
+```
+
+The `Release` GitHub Action builds the installer on a Windows runner, runs the
+test suite, and publishes the release; every kiosk picks it up automatically.
+
 ## Kiosk setup (Windows)
 
 1. `npm run dist`, then run the installer from `dist/` on the kiosk machine

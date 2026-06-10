@@ -2,6 +2,7 @@ import { usePushInvalidation } from './api/hooks'
 import { useUi } from './stores/uiStore'
 import { Header, Fab } from './features/shell/Header'
 import { Toasts } from './features/shell/Toasts'
+import { UpdateBanner } from './features/shell/UpdateBanner'
 import { WeekView } from './features/calendar/WeekView'
 import { DayView } from './features/calendar/DayView'
 import { MonthView } from './features/calendar/MonthView'
@@ -33,6 +34,7 @@ export default function App() {
       <SettingsSheet />
       <OskTray />
       <Toasts />
+      <UpdateBanner />
       <KioskOverlays />
     </div>
   )

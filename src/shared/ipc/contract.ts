@@ -32,6 +32,7 @@ import type {
  */
 export type IpcContract = {
   'app:getInfo': { req: void; res: { version: string; platform: string; zone: string } }
+  'app:installUpdate': { req: void; res: void }
 
   'settings:getAll': { req: void; res: AppSettings }
   'settings:set': { req: { patch: Partial<AppSettings> }; res: AppSettings }

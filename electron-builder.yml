@@ -7,6 +7,10 @@ files:
   - out/**
 asarUnpack:
   - node_modules/better-sqlite3/**
+publish:
+  provider: github
+  owner: lowerygt
+  repo: OpenSkyLight
 win:
   target:
     - nsis

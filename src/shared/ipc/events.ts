@@ -5,6 +5,7 @@ export type MainPushEvents = {
   'push:syncConflict': { title: string }
   'push:kioskIdle': { state: 'active' | 'screensaver' }
   'push:sleepState': { sleeping: boolean }
+  'push:updateReady': { version: string }
 }
 
 export type PushChannel = keyof MainPushEvents

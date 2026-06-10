@@ -20,6 +20,7 @@ import type { RewardsService } from '../services/rewardsService'
 import type { ListsService } from '../services/listsService'
 import type { MealsService } from '../services/mealsService'
 import type { Kiosk } from '../kiosk/kiosk'
+import type { Updater } from '../updater'
 
 export interface Services {
   settings: SettingsService
@@ -37,6 +38,7 @@ export interface Services {
   lists: ListsService
   meals: MealsService
   kiosk: Kiosk
+  updater: Updater
 }
 
 /**
@@ -123,6 +125,7 @@ export function registerIpcHandlers(services: Services): void {
     platform: process.platform,
     zone: DateTime.local().zoneName ?? 'UTC'
   }))
+  handle('app:installUpdate', null, () => services.updater.quitAndInstall())
 
   handle('settings:getAll', null, () => services.settings.getAll())
   handle('settings:set', s.settingsPatchSchema, (req) => {

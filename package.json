@@ -15,12 +15,14 @@
     "test": "node scripts/run-vitest.mjs run",
     "test:watch": "node scripts/run-vitest.mjs",
     "postinstall": "electron-builder install-app-deps",
-    "dist": "electron-vite build && electron-builder"
+    "dist": "electron-vite build && electron-builder",
+    "release": "electron-vite build && electron-builder --publish always"
   },
   "dependencies": {
     "@googleapis/calendar": "^15.0.0",
     "better-sqlite3": "^12.4.1",
     "drizzle-orm": "^0.38.4",
+    "electron-updater": "^6.8.9",
     "google-auth-library": "^10.7.0",
     "ical.js": "^2.2.1",
     "luxon": "^3.5.0",

@@ -1,0 +1,51 @@
+{
+  "name": "openskylight",
+  "version": "0.1.0",
+  "description": "OpenSkyLight — an open-source standalone family calendar display (Skylight Calendar clone)",
+  "main": "./out/main/index.js",
+  "author": "Tyler",
+  "license": "MIT",
+  "private": true,
+  "scripts": {
+    "dev": "electron-vite dev",
+    "dev:windowed": "electron-vite dev -- --windowed",
+    "build": "electron-vite build",
+    "preview": "electron-vite preview",
+    "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
+    "test": "node scripts/run-vitest.mjs run",
+    "test:watch": "node scripts/run-vitest.mjs",
+    "postinstall": "electron-builder install-app-deps",
+    "dist": "electron-vite build && electron-builder"
+  },
+  "dependencies": {
+    "better-sqlite3": "^12.4.1",
+    "drizzle-orm": "^0.38.4",
+    "luxon": "^3.5.0",
+    "rrule": "^2.8.1",
+    "zod": "^3.24.1"
+  },
+  "devDependencies": {
+    "@fontsource-variable/fraunces": "^5.1.0",
+    "@fontsource-variable/nunito": "^5.1.0",
+    "@tailwindcss/vite": "^4.0.6",
+    "@tanstack/react-query": "^5.66.0",
+    "@types/better-sqlite3": "^7.6.12",
+    "@types/luxon": "^3.4.2",
+    "@types/node": "^22.13.1",
+    "@types/react": "^19.0.8",
+    "@types/react-dom": "^19.0.3",
+    "@vitejs/plugin-react": "^4.3.4",
+    "electron": "^34.2.0",
+    "electron-builder": "^25.1.8",
+    "electron-vite": "^3.0.0",
+    "playwright-core": "^1.60.0",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0",
+    "react-simple-keyboard": "^3.8.27",
+    "tailwindcss": "^4.0.6",
+    "typescript": "^5.7.3",
+    "vite": "^6.1.0",
+    "vitest": "^3.0.5",
+    "zustand": "^5.0.3"
+  }
+}

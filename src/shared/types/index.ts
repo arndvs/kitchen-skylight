@@ -1,0 +1,182 @@
+export type PersonRole = 'parent' | 'child'
+
+export interface PersonDto {
+  id: string
+  name: string
+  color: string
+  role: PersonRole
+  sortOrder: number
+}
+
+export interface PersonCreateInput {
+  name: string
+  color: string
+  role: PersonRole
+}
+
+export interface PersonUpdateInput {
+  id: string
+  name?: string
+  color?: string
+  role?: PersonRole
+  sortOrder?: number
+}
+
+export type CalendarProvider = 'local' | 'google' | 'ics'
+
+export interface CalendarDto {
+  id: string
+  provider: CalendarProvider
+  name: string
+  color: string
+  readOnly: boolean
+  visible: boolean
+}
+
+export interface CalendarCreateInput {
+  name: string
+  color: string
+}
+
+export interface CalendarUpdateInput {
+  id: string
+  name?: string
+  color?: string
+  visible?: boolean
+}
+
+export type RecurrenceFreq = 'daily' | 'weekly' | 'monthly' | 'yearly'
+
+/** Simplified recurrence model used by the UI; converted to/from RRULE strings. */
+export interface RecurrenceInput {
+  freq: RecurrenceFreq
+  interval?: number
+  /** 0 = Monday ... 6 = Sunday (rrule convention) */
+  byWeekdays?: number[]
+  /** ISO date (inclusive last day the rule applies) */
+  untilDate?: string
+  count?: number
+}
+
+export type EventStatus = 'confirmed' | 'cancelled'
+
+export interface EventDto {
+  id: string
+  calendarId: string
+  title: string
+  description: string | null
+  location: string | null
+  /** UTC ISO instant */
+  startAt: string
+  endAt: string
+  /** IANA zone the event was created in */
+  tz: string
+  allDay: boolean
+  rrule: string | null
+  recurrence: RecurrenceInput | null
+  recurringEventId: string | null
+  originalStartAt: string | null
+  status: EventStatus
+  readOnly: boolean
+  personIds: string[]
+}
+
+export interface OccurrenceDto {
+  /** Unique per occurrence: `${eventId}|${occurrenceStart}` */
+  key: string
+  /** Row that holds this occurrence's data (exception row id if overridden) */
+  eventId: string
+  /** Master series row id (= eventId when not an exception) */
+  masterId: string
+  calendarId: string
+  title: string
+  location: string | null
+  /** UTC ISO instants */
+  start: string
+  end: string
+  allDay: boolean
+  isRecurring: boolean
+  readOnly: boolean
+  /** Original (pre-override) start; the key used for `this`/`following` edits */
+  occurrenceStart: string
+  personIds: string[]
+}
+
+export interface EventPatch {
+  title?: string
+  description?: string | null
+  location?: string | null
+  start?: string
+  end?: string
+  tz?: string
+  allDay?: boolean
+  personIds?: string[]
+  /** undefined = leave unchanged; null = remove recurrence */
+  recurrence?: RecurrenceInput | null
+}
+
+export interface EventCreateInput {
+  calendarId: string
+  title: string
+  description?: string | null
+  location?: string | null
+  start: string
+  end: string
+  tz: string
+  allDay: boolean
+  personIds: string[]
+  recurrence?: RecurrenceInput | null
+}
+
+export type EditScope = 'this' | 'following' | 'all'
+
+export interface EventUpdateInput {
+  id: string
+  scope: EditScope
+  /** Required when scope is 'this' or 'following' on a recurring event */
+  occurrenceStart?: string
+  changes: EventPatch
+}
+
+export interface EventDeleteInput {
+  id: string
+  scope: EditScope
+  occurrenceStart?: string
+}
+
+export type CalendarViewKind = 'day' | 'week' | 'month' | 'agenda'
+
+export interface AppSettings {
+  /** 0 = Sunday, 1 = Monday */
+  weekStartsOn: 0 | 1
+  defaultView: CalendarViewKind
+  timeFormat: '12h' | '24h'
+  weather: { lat: number; lon: number; label: string } | null
+  sleep: { enabled: boolean; start: string; end: string }
+  screensaver: { folder: string | null; idleMinutes: number }
+}
+
+export const DEFAULT_SETTINGS: AppSettings = {
+  weekStartsOn: 0,
+  defaultView: 'week',
+  timeFormat: '12h',
+  weather: null,
+  sleep: { enabled: false, start: '21:30', end: '06:30' },
+  screensaver: { folder: null, idleMinutes: 10 }
+}
+
+/** Touch-friendly person color palette (Skylight-style) */
+export const PERSON_COLORS = [
+  '#E5484D', // red
+  '#F76B15', // orange
+  '#FFB224', // amber
+  '#46A758', // green
+  '#12A594', // teal
+  '#0091FF', // blue
+  '#6E56CF', // violet
+  '#D6409F', // pink
+  '#8E4EC6', // purple
+  '#00749E' // deep cyan
+] as const
+
+export const CALENDAR_COLORS = PERSON_COLORS

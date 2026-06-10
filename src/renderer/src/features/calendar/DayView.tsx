@@ -1,0 +1,55 @@
+import { useSettings } from '../../api/hooks'
+import { useUi, ZONE } from '../../stores/uiStore'
+import { occurrenceColor } from '../../lib/colors'
+import { EventCard } from './EventCard'
+import { useCalendarData, useViewRange } from './useCalendarData'
+import { DateTime } from 'luxon'
+import { BigButton } from '../../components/ui'
+import { PlusIcon } from '../../components/icons'
+
+export function DayView() {
+  const range = useViewRange()
+  const { byDay, peopleById, calendarsById } = useCalendarData(range)
+  const { data: settings } = useSettings()
+  const focusedDate = useUi((s) => s.focusedDate)
+  const openCreate = useUi((s) => s.openCreate)
+  const openEdit = useUi((s) => s.openEdit)
+  const timeFormat = settings?.timeFormat ?? '12h'
+  const occurrences = byDay.get(focusedDate) ?? []
+  const day = DateTime.fromISO(focusedDate, { zone: ZONE })
+
+  return (
+    <div className="mx-auto h-full w-full max-w-3xl overflow-y-auto px-6 pb-28">
+      <div className="animate-rise mb-4 flex items-end justify-between">
+        <div>
+          <div className="font-display text-5xl">{day.toFormat('cccc')}</div>
+          <div className="mt-1 text-xl font-bold text-ink-soft">{day.toFormat('LLLL d, yyyy')}</div>
+        </div>
+      </div>
+      <div className="flex flex-col gap-3">
+        {occurrences.map((occ, i) => (
+          <div key={occ.key} className="animate-rise" style={{ animationDelay: `${i * 40}ms` }}>
+            <EventCard
+              occ={occ}
+              color={occurrenceColor(occ, peopleById, calendarsById)}
+              timeFormat={timeFormat}
+              peopleById={peopleById}
+              onTap={() => openEdit(occ)}
+              size="lg"
+            />
+          </div>
+        ))}
+        {occurrences.length === 0 && (
+          <div className="animate-rise mt-16 flex flex-col items-center gap-5 text-center">
+            <div className="font-display text-3xl text-ink-faint">A clear day</div>
+            <BigButton onClick={() => openCreate(focusedDate)}>
+              <span className="flex items-center gap-2">
+                <PlusIcon size={20} /> Add something
+              </span>
+            </BigButton>
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

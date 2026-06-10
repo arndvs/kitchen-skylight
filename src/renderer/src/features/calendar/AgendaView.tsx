@@ -1,0 +1,67 @@
+import { eachDay } from '@shared/dates'
+import { useSettings } from '../../api/hooks'
+import { useUi, ZONE } from '../../stores/uiStore'
+import { occurrenceColor } from '../../lib/colors'
+import { isToday } from '../../lib/format'
+import { EventCard } from './EventCard'
+import { useCalendarData, useViewRange } from './useCalendarData'
+
+export function AgendaView() {
+  const range = useViewRange()
+  const { byDay, peopleById, calendarsById } = useCalendarData(range)
+  const { data: settings } = useSettings()
+  const openEdit = useUi((s) => s.openEdit)
+  const openCreate = useUi((s) => s.openCreate)
+  const timeFormat = settings?.timeFormat ?? '12h'
+  const days = eachDay(range, ZONE)
+
+  return (
+    <div className="mx-auto h-full w-full max-w-3xl overflow-y-auto px-6 pb-28">
+      <div className="flex flex-col gap-2">
+        {days.map((day, i) => {
+          const key = day.toISODate()!
+          const occurrences = byDay.get(key) ?? []
+          if (occurrences.length === 0) return null
+          const today = isToday(key)
+          return (
+            <div key={key} className="animate-rise flex gap-4 py-2" style={{ animationDelay: `${i * 30}ms` }}>
+              <button
+                type="button"
+                onClick={() => openCreate(key)}
+                className={`pressable flex h-20 w-20 shrink-0 flex-col items-center justify-center rounded-2xl ${
+                  today ? 'bg-ember text-white shadow-card' : 'bg-paper-deep/60 text-ink'
+                }`}
+              >
+                <span className={`text-xs font-extrabold uppercase ${today ? 'text-white/80' : 'text-ink-faint'}`}>
+                  {day.toFormat('ccc')}
+                </span>
+                <span className="font-display text-3xl leading-none">{day.day}</span>
+                <span className={`text-xs font-bold ${today ? 'text-white/80' : 'text-ink-faint'}`}>
+                  {day.toFormat('LLL')}
+                </span>
+              </button>
+              <div className="flex min-w-0 flex-1 flex-col gap-2">
+                {occurrences.map((occ) => (
+                  <EventCard
+                    key={occ.key}
+                    occ={occ}
+                    color={occurrenceColor(occ, peopleById, calendarsById)}
+                    timeFormat={timeFormat}
+                    peopleById={peopleById}
+                    onTap={() => openEdit(occ)}
+                    size="lg"
+                  />
+                ))}
+              </div>
+            </div>
+          )
+        })}
+        {[...byDay.values()].every((v) => v.length === 0) && (
+          <div className="animate-rise mt-20 text-center font-display text-3xl text-ink-faint">
+            Nothing coming up — enjoy the quiet
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}

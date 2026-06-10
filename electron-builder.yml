@@ -11,6 +11,7 @@ publish:
   provider: github
   owner: lowerygt
   repo: OpenSkyLight
+  releaseType: release
 win:
   target:
     - nsis

@@ -12,6 +12,8 @@ import { createWeatherService } from './services/weatherService'
 import { createAuthService } from './services/authService'
 import { createChoresService } from './services/choresService'
 import { createRewardsService } from './services/rewardsService'
+import { createListsService } from './services/listsService'
+import { createMealsService } from './services/mealsService'
 import { createGoogleAuth } from './sync/googleAuth'
 import { createGoogleSync } from './sync/googleSync'
 import { createOutboxWorker } from './sync/outboxWorker'
@@ -70,7 +72,9 @@ if (!gotLock) {
       weather: createWeatherService(settings),
       auth: createAuthService(settings),
       chores: choresService,
-      rewards: createRewardsService(db, choresService)
+      rewards: createRewardsService(db, choresService),
+      lists: createListsService(db),
+      meals: createMealsService(db)
     })
     createMainWindow()
     syncManager.start()

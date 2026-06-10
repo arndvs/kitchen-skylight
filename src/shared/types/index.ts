@@ -144,7 +144,35 @@ export interface EventDeleteInput {
   occurrenceStart?: string
 }
 
-export type CalendarViewKind = 'day' | 'week' | 'month' | 'agenda' | 'chores'
+export type CalendarViewKind = 'day' | 'week' | 'month' | 'agenda' | 'chores' | 'lists'
+
+export type ListKind = 'grocery' | 'todo' | 'custom'
+
+export interface ListItemDto {
+  id: string
+  text: string
+  checked: boolean
+  sortOrder: number
+}
+
+export interface ListDto {
+  id: string
+  name: string
+  color: string
+  kind: ListKind
+  items: ListItemDto[]
+}
+
+export type MealSlotKind = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+
+export const MEAL_SLOTS: MealSlotKind[] = ['breakfast', 'lunch', 'dinner', 'snack']
+
+export interface MealSlotDto {
+  /** YYYY-MM-DD */
+  date: string
+  slot: MealSlotKind
+  text: string
+}
 
 export type ChoreRoutine = 'morning' | 'evening' | null
 

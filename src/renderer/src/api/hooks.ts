@@ -230,6 +230,52 @@ export function useRewardMutations() {
   }
 }
 
+export function useLists() {
+  return useQuery({ queryKey: ['lists'], queryFn: () => ipcInvoke('lists:getAll', undefined) })
+}
+
+export function useListMutations() {
+  const keys = [['lists']]
+  return {
+    create: useInvalidatingMutation(
+      (input: Parameters<typeof ipcInvoke<'lists:create'>>[1]) => ipcInvoke('lists:create', input),
+      keys
+    ),
+    update: useInvalidatingMutation(
+      (input: { id: string; name?: string; color?: string }) => ipcInvoke('lists:update', input),
+      keys
+    ),
+    remove: useInvalidatingMutation((input: { id: string }) => ipcInvoke('lists:delete', input), keys),
+    addItem: useInvalidatingMutation(
+      (input: { listId: string; text: string }) => ipcInvoke('listItems:add', input),
+      keys
+    ),
+    toggleItem: useInvalidatingMutation((input: { id: string }) => ipcInvoke('listItems:toggle', input), keys),
+    removeItem: useInvalidatingMutation((input: { id: string }) => ipcInvoke('listItems:delete', input), keys),
+    clearChecked: useInvalidatingMutation(
+      (input: { listId: string }) => ipcInvoke('listItems:clearChecked', input),
+      keys
+    )
+  }
+}
+
+export function useMeals(start: string, end: string) {
+  return useQuery({
+    queryKey: ['meals', start, end],
+    queryFn: () => ipcInvoke('meals:getRange', { start, end }),
+    placeholderData: (prev) => prev
+  })
+}
+
+export function useMealMutations() {
+  return {
+    set: useInvalidatingMutation(
+      (input: Parameters<typeof ipcInvoke<'meals:set'>>[1]) => ipcInvoke('meals:set', input),
+      [['meals']]
+    )
+  }
+}
+
 export function useWeather() {
   return useQuery({
     queryKey: ['weather'],

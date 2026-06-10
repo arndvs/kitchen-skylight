@@ -86,7 +86,7 @@ export const settingsPatchSchema = z.object({
   patch: z
     .object({
       weekStartsOn: z.union([z.literal(0), z.literal(1)]).optional(),
-      defaultView: z.enum(['day', 'week', 'month', 'agenda', 'chores']).optional(),
+      defaultView: z.enum(['day', 'week', 'month', 'agenda', 'chores', 'lists']).optional(),
       timeFormat: z.enum(['12h', '24h']).optional(),
       temperatureUnit: z.enum(['f', 'c']).optional(),
       weather: z.object({ lat: z.number(), lon: z.number(), label: z.string() }).nullable().optional(),
@@ -160,6 +160,28 @@ export const rewardUpdateSchema = z.object({
 
 export const redeemSchema = z.object({ rewardId: id, personId: id })
 export const grantSchema = z.object({ redemptionId: id })
+
+export const listCreateSchema = z.object({
+  name: z.string().trim().min(1).max(80),
+  color: hexColor,
+  kind: z.enum(['grocery', 'todo', 'custom'])
+})
+
+export const listUpdateSchema = z.object({
+  id,
+  name: z.string().trim().min(1).max(80).optional(),
+  color: hexColor.optional()
+})
+
+export const listItemAddSchema = z.object({ listId: id, text: z.string().trim().min(1).max(300) })
+export const listIdSchema = z.object({ listId: id })
+
+export const mealsRangeSchema = z.object({ start: isoDate, end: isoDate })
+export const mealSetSchema = z.object({
+  date: isoDate,
+  slot: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
+  text: z.string().trim().max(200).nullable()
+})
 
 export const citySearchSchema = z.object({ query: z.string().trim().min(2).max(80) })
 

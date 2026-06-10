@@ -108,10 +108,24 @@ export function OskTray() {
     setLayout('default')
   }, [target?.id, echo, target])
 
+  // Any tap that is neither on the keyboard nor on a text input dismisses the
+  // tray. Listen to `click` (not pointerdown): closing earlier would reflow the
+  // dialog mid-gesture and the tap would land on the moved layout.
+  useEffect(() => {
+    if (!target) return
+    const onClick = (e: MouseEvent): void => {
+      const el = e.target as HTMLElement | null
+      if (el?.closest('.osl-osk-tray') || el?.tagName === 'INPUT') return
+      close()
+    }
+    document.addEventListener('click', onClick, true)
+    return () => document.removeEventListener('click', onClick, true)
+  }, [target, close])
+
   if (!target) return null
 
   return (
-    <div className="fixed inset-x-0 bottom-0 z-[60] border-t border-line bg-paper/95 px-3 pt-3 pb-4 shadow-float backdrop-blur-md">
+    <div className="osl-osk-tray fixed inset-x-0 bottom-0 z-[60] border-t border-line bg-paper/95 px-3 pt-3 pb-4 shadow-float backdrop-blur-md">
       <div className="mx-auto max-w-4xl">
         <Keyboard
           keyboardRef={(r) => (keyboardRef.current = r)}

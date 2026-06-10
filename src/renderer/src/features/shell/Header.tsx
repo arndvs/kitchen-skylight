@@ -94,8 +94,8 @@ export function Header() {
         </div>
       )}
 
-      {/* period nav */}
-      <div className="flex shrink-0 items-center gap-1 rounded-2xl bg-paper-deep/70 p-1">
+      {/* period nav (not meaningful on the Lists screen) */}
+      <div className={`flex shrink-0 items-center gap-1 rounded-2xl bg-paper-deep/70 p-1 ${view === 'lists' ? 'invisible' : ''}`}>
         <IconButton label="Previous" onClick={() => step(-1)}>
           <ChevronLeftIcon />
         </IconButton>
@@ -118,8 +118,9 @@ export function Header() {
           { value: 'day', label: 'Day' },
           { value: 'week', label: 'Week' },
           { value: 'month', label: 'Month' },
-          { value: 'agenda', label: 'List' },
-          { value: 'chores', label: 'Chores' }
+          { value: 'agenda', label: 'Agenda' },
+          { value: 'chores', label: 'Chores' },
+          { value: 'lists', label: 'Lists' }
         ]}
       />
 

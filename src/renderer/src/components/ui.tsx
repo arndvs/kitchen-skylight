@@ -155,6 +155,11 @@ export function Dialog({
 }) {
   // shift above the on-screen keyboard while an input inside is focused
   const oskOpen = useOsk((s) => s.target !== null)
+  // the keyboard must never outlive the dialog that hosts its input
+  useEffect(() => {
+    if (!open) useOsk.getState().close()
+    return () => useOsk.getState().close()
+  }, [open])
   if (!open) return null
   return (
     <div className={`fixed inset-0 z-50 flex justify-center p-6 ${oskOpen ? 'items-start pt-4' : 'items-center'}`}>

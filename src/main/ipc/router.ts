@@ -17,6 +17,8 @@ import type { WeatherService } from '../services/weatherService'
 import type { AuthService } from '../services/authService'
 import type { ChoresService } from '../services/choresService'
 import type { RewardsService } from '../services/rewardsService'
+import type { ListsService } from '../services/listsService'
+import type { MealsService } from '../services/mealsService'
 
 export interface Services {
   settings: SettingsService
@@ -31,6 +33,8 @@ export interface Services {
   auth: AuthService
   chores: ChoresService
   rewards: RewardsService
+  lists: ListsService
+  meals: MealsService
 }
 
 /**
@@ -190,6 +194,18 @@ export function registerIpcHandlers(services: Services): void {
   handle('rewards:redeem', s.redeemSchema, (req) => services.rewards.redeem(req.rewardId, req.personId))
   handle('rewards:redemptions', null, () => services.rewards.pendingRedemptions())
   handle('rewards:grant', s.grantSchema, (req) => services.rewards.grant(req.redemptionId))
+
+  handle('lists:getAll', null, () => services.lists.getAll())
+  handle('lists:create', s.listCreateSchema, (req) => services.lists.create(req))
+  handle('lists:update', s.listUpdateSchema, (req) => services.lists.update(req))
+  handle('lists:delete', s.idSchema, (req) => services.lists.remove(req.id))
+  handle('listItems:add', s.listItemAddSchema, (req) => services.lists.addItem(req.listId, req.text))
+  handle('listItems:toggle', s.idSchema, (req) => services.lists.toggleItem(req.id))
+  handle('listItems:delete', s.idSchema, (req) => services.lists.removeItem(req.id))
+  handle('listItems:clearChecked', s.listIdSchema, (req) => services.lists.clearChecked(req.listId))
+
+  handle('meals:getRange', s.mealsRangeSchema, (req) => services.meals.getRange(req.start, req.end))
+  handle('meals:set', s.mealSetSchema, (req) => services.meals.set(req.date, req.slot, req.text))
 
   handle('weather:get', null, () => services.weather.get())
   handle('weather:searchCity', s.citySearchSchema, (req) => services.weather.searchCity(req.query))

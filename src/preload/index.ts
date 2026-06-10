@@ -13,7 +13,10 @@ const ALLOWED_INVOKE_PREFIXES = [
   'auth:',
   'chores:',
   'stars:',
-  'rewards:'
+  'rewards:',
+  'lists:',
+  'listItems:',
+  'meals:'
 ]
 const PUSH_PREFIX = 'push:'
 

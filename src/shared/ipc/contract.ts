@@ -11,6 +11,11 @@ import type {
   EventDeleteInput,
   EventDto,
   EventUpdateInput,
+  ListDto,
+  ListItemDto,
+  ListKind,
+  MealSlotDto,
+  MealSlotKind,
   OccurrenceDto,
   PersonCreateInput,
   PersonDto,
@@ -82,6 +87,18 @@ export type IpcContract = {
 
   'stars:balances': { req: void; res: StarBalanceDto[] }
 
+  'lists:getAll': { req: void; res: ListDto[] }
+  'lists:create': { req: { name: string; color: string; kind: ListKind }; res: ListDto }
+  'lists:update': { req: { id: string; name?: string; color?: string }; res: ListDto }
+  'lists:delete': { req: { id: string }; res: void }
+  'listItems:add': { req: { listId: string; text: string }; res: ListItemDto }
+  'listItems:toggle': { req: { id: string }; res: void }
+  'listItems:delete': { req: { id: string }; res: void }
+  'listItems:clearChecked': { req: { listId: string }; res: void }
+
+  'meals:getRange': { req: { start: string; end: string }; res: MealSlotDto[] }
+  'meals:set': { req: { date: string; slot: MealSlotKind; text: string | null }; res: void }
+
   'rewards:list': { req: void; res: RewardDto[] }
   'rewards:create': { req: { title: string; costStars: number }; res: RewardDto }
   'rewards:update': { req: { id: string; title?: string; costStars?: number; active?: boolean }; res: RewardDto }
@@ -144,7 +161,10 @@ export const ALLOWED_CHANNEL_PREFIXES = [
   'auth:',
   'chores:',
   'stars:',
-  'rewards:'
+  'rewards:',
+  'lists:',
+  'listItems:',
+  'meals:'
 ] as const
 
 /** Envelope used for every invoke result so errors cross the bridge cleanly. */

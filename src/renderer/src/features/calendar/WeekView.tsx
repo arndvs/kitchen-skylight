@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { DateTime } from 'luxon'
 import { eachDay } from '@shared/dates'
 import { useSettings } from '../../api/hooks'
@@ -7,6 +8,7 @@ import { isToday } from '../../lib/format'
 import { EventCard } from './EventCard'
 import { useCalendarData, useViewRange } from './useCalendarData'
 import { PlusIcon } from '../../components/icons'
+import { MealsDialog, MealStrip, useMealsForRange } from '../meals/Meals'
 
 export function WeekView() {
   const range = useViewRange()
@@ -16,6 +18,8 @@ export function WeekView() {
   const openEdit = useUi((s) => s.openEdit)
   const timeFormat = settings?.timeFormat ?? '12h'
   const days = eachDay(range, ZONE)
+  const mealsByDay = useMealsForRange(range)
+  const [mealDate, setMealDate] = useState<string | null>(null)
 
   return (
     <div className="grid h-full grid-cols-7 gap-3 px-6 pb-6">
@@ -70,9 +74,13 @@ export function WeekView() {
                 <div className="flex-1" onClick={() => openCreate(key)} />
               )}
             </div>
+            <div className="mt-2">
+              <MealStrip date={key} meals={mealsByDay.get(key) ?? []} onOpen={setMealDate} />
+            </div>
           </div>
         )
       })}
+      <MealsDialog date={mealDate} meals={mealDate ? (mealsByDay.get(mealDate) ?? []) : []} onClose={() => setMealDate(null)} />
     </div>
   )
 }

@@ -16,6 +16,7 @@ import { createListsService } from './services/listsService'
 import { createMealsService } from './services/mealsService'
 import { createKiosk } from './kiosk/kiosk'
 import { createUpdater } from './updater'
+import { createRssService } from './services/rssService'
 import { createGoogleAuth } from './sync/googleAuth'
 import { createGoogleSync } from './sync/googleSync'
 import { createOutboxWorker } from './sync/outboxWorker'
@@ -80,7 +81,8 @@ if (!gotLock) {
       lists: createListsService(db),
       meals: createMealsService(db),
       kiosk,
-      updater
+      updater,
+      rss: createRssService()
     })
     createMainWindow()
     syncManager.start()

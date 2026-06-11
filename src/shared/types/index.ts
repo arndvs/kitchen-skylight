@@ -156,10 +156,13 @@ export type HomeTileType =
   | 'meals'
   | 'clock'
   | 'photo'
+  | 'news'
 
 export interface HomeTileConfig {
   /** 'list' tiles: which list to show */
   listId?: string
+  /** 'news' tiles: which preset feed (see shared/rss.ts) */
+  feedId?: string
 }
 
 export interface HomeTile {

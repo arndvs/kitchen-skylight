@@ -86,6 +86,15 @@ describe('sanitizeLayout', () => {
     expect(canPlace(result.slice(0, 1), result[1], result[1].id)).toBe(true)
     expect(result[1]).toMatchObject({ x: 2, y: 0 })
   })
+  it('preserves tile config (listId and feedId) through sanitization', () => {
+    const result = sanitizeLayout([
+      { id: 'n', type: 'news', x: 0, y: 0, w: 4, h: 3, config: { feedId: 'npr' } },
+      { id: 'l', type: 'list', x: 4, y: 0, w: 3, h: 4, config: { listId: 'abc', junk: 'dropped' } }
+    ])
+    expect(result[0].config).toEqual({ feedId: 'npr' })
+    expect(result[1].config).toEqual({ listId: 'abc' })
+  })
+
   it('dedupes ids', () => {
     const result = sanitizeLayout([
       { id: 'a', type: 'clock', x: 0, y: 0, w: 2, h: 2 },

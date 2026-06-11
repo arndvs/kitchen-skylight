@@ -108,6 +108,16 @@ export type IpcContract = {
   'rewards:redemptions': { req: void; res: RedemptionDto[] }
   'rewards:grant': { req: { redemptionId: string }; res: void }
 
+  'rss:getFeed': {
+    req: { feedId: string }
+    res: {
+      feedId: string
+      label: string
+      items: { title: string; link: string | null; publishedAt: string | null }[]
+      fetchedAt: string
+    }
+  }
+
   'weather:get': {
     req: void
     res: {
@@ -171,7 +181,8 @@ export const ALLOWED_CHANNEL_PREFIXES = [
   'listItems:',
   'meals:',
   'screensaver:',
-  'kiosk:'
+  'kiosk:',
+  'rss:'
 ] as const
 
 /** Envelope used for every invoke result so errors cross the bridge cleanly. */

@@ -21,6 +21,7 @@ import type { ListsService } from '../services/listsService'
 import type { MealsService } from '../services/mealsService'
 import type { Kiosk } from '../kiosk/kiosk'
 import type { Updater } from '../updater'
+import type { RssService } from '../services/rssService'
 
 export interface Services {
   settings: SettingsService
@@ -39,6 +40,7 @@ export interface Services {
   meals: MealsService
   kiosk: Kiosk
   updater: Updater
+  rss: RssService
 }
 
 /**
@@ -216,6 +218,8 @@ export function registerIpcHandlers(services: Services): void {
 
   handle('meals:getRange', s.mealsRangeSchema, (req) => services.meals.getRange(req.start, req.end))
   handle('meals:set', s.mealSetSchema, (req) => services.meals.set(req.date, req.slot, req.text))
+
+  handle('rss:getFeed', s.rssFeedSchema, (req) => services.rss.getFeed(req.feedId))
 
   handle('weather:get', null, () => services.weather.get())
   handle('weather:searchCity', s.citySearchSchema, (req) => services.weather.searchCity(req.query))

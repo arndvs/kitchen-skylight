@@ -18,7 +18,8 @@ const ALLOWED_INVOKE_PREFIXES = [
   'listItems:',
   'meals:',
   'screensaver:',
-  'kiosk:'
+  'kiosk:',
+  'rss:'
 ]
 const PUSH_PREFIX = 'push:'
 

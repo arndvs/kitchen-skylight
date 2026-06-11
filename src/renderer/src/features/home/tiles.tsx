@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import { DateTime } from 'luxon'
 import { useQuery } from '@tanstack/react-query'
 import type { HomeTile } from '@shared/types'
+import { presetById } from '@shared/rss'
 import { agendaRange, dayRange, eachDay } from '@shared/dates'
 import { ipcInvoke } from '../../api/client'
 import {
@@ -301,6 +302,50 @@ export function ClockTile({ compact }: TileProps) {
         {timeFormat === '24h' ? now.toFormat('HH:mm') : now.toFormat('h:mm')}
       </span>
       <span className="mt-1 text-sm font-bold text-ink-soft">{now.toFormat('ccc, LLL d')}</span>
+    </div>
+  )
+}
+
+export function NewsTile({ tile, compact }: TileProps) {
+  const preset = tile.config?.feedId ? presetById(tile.config.feedId) : undefined
+  const { data: feed, isError } = useQuery({
+    queryKey: ['rss', tile.config?.feedId],
+    queryFn: () => ipcInvoke('rss:getFeed', { feedId: tile.config!.feedId! }),
+    enabled: !!preset,
+    refetchInterval: 15 * 60_000,
+    retry: 2
+  })
+  if (!preset) return <Placeholder>Feed not found — re-add this tile</Placeholder>
+
+  const maxItems = compact ? 3 : Math.max(3, tile.h * 2 - 1)
+  return (
+    <div className="flex h-full flex-col overflow-hidden">
+      <TileTitle>{preset.label}</TileTitle>
+      {isError && !feed ? (
+        <Placeholder>Couldn't load headlines — will retry</Placeholder>
+      ) : !feed ? (
+        <Placeholder>Loading headlines…</Placeholder>
+      ) : (
+        <div className="flex min-h-0 flex-col gap-1.5 overflow-hidden">
+          {feed.items.slice(0, maxItems).map((item, i) => (
+            <div key={i} className="flex items-start gap-2">
+              <span className="mt-[7px] h-1.5 w-1.5 shrink-0 rounded-full bg-ember" />
+              <span className="min-w-0 flex-1">
+                <span
+                  className={`block overflow-hidden font-bold text-ellipsis ${compact ? 'text-xs whitespace-nowrap' : 'line-clamp-2 text-sm'}`}
+                >
+                  {item.title}
+                </span>
+                {item.publishedAt && !compact && (
+                  <span className="block text-[11px] font-bold text-ink-faint">
+                    {DateTime.fromISO(item.publishedAt).toRelative()}
+                  </span>
+                )}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

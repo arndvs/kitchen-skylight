@@ -25,7 +25,8 @@ export const TILE_SPECS: Record<HomeTileType, TileSpec> = {
   list: { minW: 2, minH: 3, defaultW: 3, defaultH: 4, allowMultiple: true },
   meals: { minW: 2, minH: 2, defaultW: 3, defaultH: 2, allowMultiple: false },
   clock: { minW: 2, minH: 2, defaultW: 2, defaultH: 2, allowMultiple: false },
-  photo: { minW: 2, minH: 2, defaultW: 3, defaultH: 4, allowMultiple: true }
+  photo: { minW: 2, minH: 2, defaultW: 3, defaultH: 4, allowMultiple: true },
+  news: { minW: 3, minH: 2, defaultW: 4, defaultH: 3, allowMultiple: true }
 }
 
 /** Tiles the full 12x6 grid with no gaps; list/photo stay in the Add Tile sheet. */
@@ -108,11 +109,19 @@ export function sanitizeLayout(raw: unknown): HomeTile[] {
     }
 
     seenIds.add(t.id)
+    let config: HomeTile['config']
+    if (t.config && typeof t.config === 'object') {
+      const raw = t.config as Record<string, unknown>
+      config = {
+        ...(typeof raw.listId === 'string' ? { listId: raw.listId } : {}),
+        ...(typeof raw.feedId === 'string' ? { feedId: raw.feedId } : {})
+      }
+    }
     out.push({
       id: t.id,
       type: t.type as HomeTileType,
       ...rect,
-      ...(t.config && typeof t.config === 'object' ? { config: { listId: (t.config as { listId?: unknown }).listId as string | undefined } } : {})
+      ...(config && Object.keys(config).length > 0 ? { config } : {})
     })
   }
   return out

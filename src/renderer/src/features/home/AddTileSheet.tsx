@@ -1,13 +1,15 @@
 import { useState } from 'react'
 import type { HomeTile, HomeTileType } from '@shared/types'
 import { findFreeSpot, TILE_SPECS } from '@shared/home'
+import { PRESET_FEEDS } from '@shared/rss'
 import { uuidv7 } from '@shared/uuid'
 import { useLists } from '../../api/hooks'
 import { useToasts } from '../../stores/toastStore'
-import { Sheet } from '../../components/ui'
+import { FieldLabel, Sheet } from '../../components/ui'
 import { TILE_REGISTRY } from './tileRegistry'
 
 const TILE_TYPES = Object.keys(TILE_REGISTRY) as HomeTileType[]
+type PickerStep = null | 'list' | 'news'
 
 export function AddTileSheet({
   open,
@@ -22,7 +24,7 @@ export function AddTileSheet({
 }) {
   const { data: lists = [] } = useLists()
   const pushToast = useToasts((s) => s.push)
-  const [pickingList, setPickingList] = useState(false)
+  const [picker, setPicker] = useState<PickerStep>(null)
 
   const place = (type: HomeTileType, config?: HomeTile['config']): void => {
     const spec = TILE_SPECS[type]
@@ -42,20 +44,22 @@ export function AddTileSheet({
       h: fitsDefault ? spec.defaultH : spec.minH,
       ...(config ? { config } : {})
     })
-    setPickingList(false)
+    setPicker(null)
     onClose()
   }
+
+  const title = picker === 'list' ? 'Which list?' : picker === 'news' ? 'Which news feed?' : 'Add a tile'
 
   return (
     <Sheet
       open={open}
       onClose={() => {
-        setPickingList(false)
+        setPicker(null)
         onClose()
       }}
-      title={pickingList ? 'Which list?' : 'Add a tile'}
+      title={title}
     >
-      {pickingList ? (
+      {picker === 'list' ? (
         <div className="flex flex-col gap-2 pb-2">
           {lists.length === 0 && (
             <p className="text-base font-semibold text-ink-faint">Create a list on the Lists screen first.</p>
@@ -72,6 +76,26 @@ export function AddTileSheet({
             </button>
           ))}
         </div>
+      ) : picker === 'news' ? (
+        <div className="flex flex-col gap-4 pb-2">
+          {(['us', 'world'] as const).map((region) => (
+            <div key={region}>
+              <FieldLabel>{region === 'us' ? 'United States' : 'World'}</FieldLabel>
+              <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
+                {PRESET_FEEDS.filter((f) => f.region === region).map((feed) => (
+                  <button
+                    key={feed.id}
+                    type="button"
+                    onClick={() => place('news', { feedId: feed.id })}
+                    className="pressable rounded-2xl bg-paper-deep/50 p-4 text-left text-lg font-bold"
+                  >
+                    {feed.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          ))}
+        </div>
       ) : (
         <div className="grid grid-cols-1 gap-2 pb-2 sm:grid-cols-2">
           {TILE_TYPES.map((type) => {
@@ -83,7 +107,9 @@ export function AddTileSheet({
                 key={type}
                 type="button"
                 disabled={alreadyPlaced}
-                onClick={() => (type === 'list' ? setPickingList(true) : place(type))}
+                onClick={() =>
+                  type === 'list' ? setPicker('list') : type === 'news' ? setPicker('news') : place(type)
+                }
                 className="pressable rounded-2xl bg-paper-deep/50 p-4 text-left disabled:opacity-40"
               >
                 <span className="block text-lg font-bold">{meta.label}</span>

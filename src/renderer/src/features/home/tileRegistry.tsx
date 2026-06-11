@@ -5,6 +5,7 @@ import {
   ClockTile,
   ListTile,
   MealsTile,
+  NewsTile,
   PhotoTile,
   StarBalancesTile,
   TodayEventsTile,
@@ -72,5 +73,10 @@ export const TILE_REGISTRY: Record<HomeTileType, TileMeta> = {
     label: 'Photo',
     description: 'Cycling photos from your screensaver folder',
     component: PhotoTile
+  },
+  news: {
+    label: 'News headlines',
+    description: 'Top stories from a news feed you pick',
+    component: NewsTile
   }
 }

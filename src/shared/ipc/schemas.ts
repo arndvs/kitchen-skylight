@@ -93,14 +93,19 @@ const homeTileSchema = z.object({
     'list',
     'meals',
     'clock',
-    'photo'
+    'photo',
+    'news'
   ]),
   x: z.number().int().min(0).max(11),
   y: z.number().int().min(0).max(5),
   w: z.number().int().min(1).max(12),
   h: z.number().int().min(1).max(6),
-  config: z.object({ listId: z.string().min(1).optional() }).optional()
+  config: z
+    .object({ listId: z.string().min(1).optional(), feedId: z.string().min(1).max(40).optional() })
+    .optional()
 })
+
+export const rssFeedSchema = z.object({ feedId: z.string().min(1).max(40) })
 
 export const settingsPatchSchema = z.object({
   patch: z

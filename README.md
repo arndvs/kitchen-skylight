@@ -1,6 +1,29 @@
 # OpenSkyLight
 
-An open-source, fully standalone family calendar display — a [Skylight Calendar](https://myskylight.com) alternative with no subscription, no cloud account, and no Home Assistant. One Electron app owns the whole touchscreen: calendar, family member color coding, and (coming milestones) Google sync, weather, chores, rewards, lists, meals, and a photo screensaver.
+An open-source, fully standalone family calendar display — a [Skylight Calendar](https://myskylight.com) alternative with no subscription, no cloud account, and no Home Assistant. One Electron app owns the whole touchscreen: calendar, family member color coding, Google sync, weather, chores, rewards, lists, meals, news, live cameras, and a photo screensaver.
+
+## What it looks like
+
+The customizable home screen — drag-and-drop tiles for today's events, the week
+ahead, weather, meals, chores progress, and star balances:
+
+![Home screen](docs/screenshots/home.png)
+
+At sunset it switches itself to a warm dark palette (here with a live news tile
+swapped in):
+
+![Home screen in dark mode](docs/screenshots/home-dark.png)
+
+| Week view with the meal strip | Touch-first event editor |
+| --- | --- |
+| ![Week view](docs/screenshots/week.png) | ![Event editor](docs/screenshots/editor.png) |
+
+| Month view | Chore board with star rewards | Family lists |
+| --- | --- | --- |
+| ![Month view](docs/screenshots/month.png) | ![Chores](docs/screenshots/chores.png) | ![Lists](docs/screenshots/lists.png) |
+
+Every screenshot is generated from a clean install by `node scripts/shot-readme.mjs`,
+which seeds demo data through the app's real IPC layer — so they stay honest.
 
 ## Status
 

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from 'react'
+import { memo, useMemo, useRef, useState } from 'react'
 import type { HomeTile } from '@shared/types'
 import { sanitizeLayout } from '@shared/home'
 import { useAuthMutations, useAuthStatus, useSettings, useSettingsMutation } from '../../api/hooks'
@@ -10,10 +10,12 @@ import { TILE_REGISTRY } from './tileRegistry'
 import { useHomeGrid } from './useHomeGrid'
 import { AddTileSheet } from './AddTileSheet'
 
-function TileBody({ tile, compact }: { tile: HomeTile; compact: boolean }) {
+// memo matters: during a drag, HomeView re-renders at pointer-event rate and
+// tile bodies (with their data hooks) must not re-execute for every move
+const TileBody = memo(function TileBody({ tile, compact }: { tile: HomeTile; compact: boolean }) {
   const Component = TILE_REGISTRY[tile.type].component
   return <Component tile={tile} compact={compact} />
-}
+})
 
 export function HomeView() {
   const { data: settings } = useSettings()
@@ -39,7 +41,9 @@ export function HomeView() {
   })
 
   const enterEdit = (): void => {
-    if (!auth) return // lock status not loaded yet — never fail open
+    // never edit before auth (fail-open) or settings (the draft would seed from
+    // the DEFAULT layout and Done would overwrite the family's real layout)
+    if (!auth || !settings) return
     if (auth.pinSet && !auth.unlocked) {
       setPinError(null)
       setPinPrompt(true)
@@ -73,10 +77,13 @@ export function HomeView() {
     <div className="relative flex h-full flex-col px-6 pb-6">
       {/* in edit mode the grid shrinks to keep the bottom row clear of the floating chrome bar */}
       <div ref={containerRef} className={`relative min-h-0 flex-1 ${editing ? 'mb-24' : ''}`} data-home-grid>
-        {effective.map((tile) => {
-          const compact = grid.ready && (tile.w * grid.cellW < 260 || tile.h * grid.cellH < 170)
+        {/* nothing renders until settings load (the fallback default layout must
+            never be mistaken for the user's) and the grid is measured */}
+        {settings != null &&
+          grid.ready &&
+          effective.map((tile) => {
+          const compact = tile.w * grid.cellW < 260 || tile.h * grid.cellH < 170
           const isActive = grid.activeTileId === tile.id
-          if (!grid.ready) return null
           if (!editing) {
             const navTarget = TILE_REGISTRY[tile.type].navTarget
             return (

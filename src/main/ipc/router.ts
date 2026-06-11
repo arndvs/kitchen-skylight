@@ -229,7 +229,7 @@ export function registerIpcHandlers(services: Services): void {
   handle('camera:add', s.cameraAddSchema, (req) => services.camera.add(req.name, req.url))
   handle('camera:remove', s.cameraIdSchema, (req) => services.camera.remove(req.cameraId))
   handle('camera:start', s.cameraIdSchema, (req) => services.camera.start(req.cameraId))
-  handle('camera:stop', s.cameraIdSchema, (req) => services.camera.stop(req.cameraId))
+  handle('camera:stop', s.cameraSessionSchema, (req) => services.camera.stop(req.sessionId))
 
   handle('weather:get', null, () => services.weather.get())
   handle('weather:searchCity', s.citySearchSchema, (req) => services.weather.searchCity(req.query))

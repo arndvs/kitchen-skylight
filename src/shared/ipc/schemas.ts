@@ -101,10 +101,12 @@ const homeTileSchema = z.object({
   y: z.number().int().min(0).max(5),
   w: z.number().int().min(1).max(12),
   h: z.number().int().min(1).max(6),
+  // value bounds must be >= what sanitizeLayout keeps (1..80), or a renderable
+  // layout could be unsaveable
   config: z
     .object({
-      listId: z.string().min(1).optional(),
-      feedId: z.string().min(1).max(40).optional(),
+      listId: z.string().min(1).max(80).optional(),
+      feedId: z.string().min(1).max(80).optional(),
       cameraId: z.string().min(1).max(80).optional()
     })
     .optional()
@@ -122,6 +124,7 @@ export const cameraAddSchema = z.object({
 })
 
 export const cameraIdSchema = z.object({ cameraId: id })
+export const cameraSessionSchema = z.object({ sessionId: id })
 
 export const settingsPatchSchema = z.object({
   patch: z

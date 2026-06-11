@@ -1,4 +1,4 @@
-import type { HomeTile, HomeTileType } from './types'
+import type { HomeTile, HomeTileConfig, HomeTileType } from './types'
 
 /**
  * Pure grid math for the customizable home screen. Shared by the renderer
@@ -14,20 +14,24 @@ export interface TileSpec {
   defaultW: number
   defaultH: number
   allowMultiple: boolean
+  /** The only config keys this tile type may carry — the single source of
+   * truth that sanitizeLayout enforces (per-type, so a list tile can never
+   * smuggle a cameraId, and forgetting a key here fails visibly in tests). */
+  configKeys: (keyof HomeTileConfig)[]
 }
 
 export const TILE_SPECS: Record<HomeTileType, TileSpec> = {
-  todayEvents: { minW: 3, minH: 3, defaultW: 4, defaultH: 6, allowMultiple: false },
-  weekAgenda: { minW: 4, minH: 3, defaultW: 5, defaultH: 4, allowMultiple: false },
-  weather: { minW: 2, minH: 2, defaultW: 3, defaultH: 2, allowMultiple: false },
-  choresProgress: { minW: 3, minH: 2, defaultW: 3, defaultH: 2, allowMultiple: false },
-  starBalances: { minW: 2, minH: 2, defaultW: 2, defaultH: 2, allowMultiple: false },
-  list: { minW: 2, minH: 3, defaultW: 3, defaultH: 4, allowMultiple: true },
-  meals: { minW: 2, minH: 2, defaultW: 3, defaultH: 2, allowMultiple: false },
-  clock: { minW: 2, minH: 2, defaultW: 2, defaultH: 2, allowMultiple: false },
-  photo: { minW: 2, minH: 2, defaultW: 3, defaultH: 4, allowMultiple: true },
-  news: { minW: 3, minH: 2, defaultW: 4, defaultH: 3, allowMultiple: true },
-  camera: { minW: 3, minH: 2, defaultW: 4, defaultH: 3, allowMultiple: true }
+  todayEvents: { minW: 3, minH: 3, defaultW: 4, defaultH: 6, allowMultiple: false, configKeys: [] },
+  weekAgenda: { minW: 4, minH: 3, defaultW: 5, defaultH: 4, allowMultiple: false, configKeys: [] },
+  weather: { minW: 2, minH: 2, defaultW: 3, defaultH: 2, allowMultiple: false, configKeys: [] },
+  choresProgress: { minW: 3, minH: 2, defaultW: 3, defaultH: 2, allowMultiple: false, configKeys: [] },
+  starBalances: { minW: 2, minH: 2, defaultW: 2, defaultH: 2, allowMultiple: false, configKeys: [] },
+  list: { minW: 2, minH: 3, defaultW: 3, defaultH: 4, allowMultiple: true, configKeys: ['listId'] },
+  meals: { minW: 2, minH: 2, defaultW: 3, defaultH: 2, allowMultiple: false, configKeys: [] },
+  clock: { minW: 2, minH: 2, defaultW: 2, defaultH: 2, allowMultiple: false, configKeys: [] },
+  photo: { minW: 2, minH: 2, defaultW: 3, defaultH: 4, allowMultiple: true, configKeys: [] },
+  news: { minW: 3, minH: 2, defaultW: 4, defaultH: 3, allowMultiple: true, configKeys: ['feedId'] },
+  camera: { minW: 3, minH: 2, defaultW: 4, defaultH: 3, allowMultiple: true, configKeys: ['cameraId'] }
 }
 
 /** Tiles the full 12x6 grid with no gaps; list/photo stay in the Add Tile sheet. */
@@ -90,7 +94,9 @@ export function sanitizeLayout(raw: unknown): HomeTile[] {
     if (typeof entry !== 'object' || entry === null) continue
     const t = entry as Partial<HomeTile>
     if (typeof t.type !== 'string' || !TILE_TYPES.has(t.type)) continue
-    if (typeof t.id !== 'string' || t.id.length === 0 || seenIds.has(t.id)) continue
+    // id constraints mirror homeTileSchema — anything sanitize keeps must
+    // also be SAVEABLE, or the user gets stuck unable to persist any edit
+    if (typeof t.id !== 'string' || t.id.length === 0 || t.id.length > 80 || seenIds.has(t.id)) continue
     const spec = TILE_SPECS[t.type as HomeTileType]
 
     let w = clamp(Math.round(Number(t.w) || spec.defaultW), spec.minW, HOME_COLS)
@@ -110,20 +116,22 @@ export function sanitizeLayout(raw: unknown): HomeTile[] {
     }
 
     seenIds.add(t.id)
-    let config: HomeTile['config']
-    if (t.config && typeof t.config === 'object') {
-      const raw = t.config as Record<string, unknown>
-      config = {
-        ...(typeof raw.listId === 'string' ? { listId: raw.listId } : {}),
-        ...(typeof raw.feedId === 'string' ? { feedId: raw.feedId } : {}),
-        ...(typeof raw.cameraId === 'string' ? { cameraId: raw.cameraId } : {})
+    // copy only this type's declared config keys, with schema-compatible values
+    let config: HomeTileConfig | undefined
+    if (spec.configKeys.length > 0 && t.config && typeof t.config === 'object') {
+      const rawConfig = t.config as Record<string, unknown>
+      for (const key of spec.configKeys) {
+        const value = rawConfig[key]
+        if (typeof value === 'string' && value.length >= 1 && value.length <= 80) {
+          config = { ...config, [key]: value }
+        }
       }
     }
     out.push({
       id: t.id,
       type: t.type as HomeTileType,
       ...rect,
-      ...(config && Object.keys(config).length > 0 ? { config } : {})
+      ...(config ? { config } : {})
     })
   }
   return out

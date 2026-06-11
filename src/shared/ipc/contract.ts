@@ -111,9 +111,10 @@ export type IpcContract = {
   'camera:list': { req: void; res: { id: string; name: string }[] }
   'camera:add': { req: { name: string; url: string }; res: { id: string; name: string } }
   'camera:remove': { req: { cameraId: string }; res: void }
-  /** Start (or join) the stream; returns the local WebSocket URL the tile plays from. */
-  'camera:start': { req: { cameraId: string }; res: { wsUrl: string } }
-  'camera:stop': { req: { cameraId: string }; res: void }
+  /** Start (or join) the stream; returns the playable URL and a per-viewer session id. */
+  'camera:start': { req: { cameraId: string }; res: { wsUrl: string; sessionId: string } }
+  /** Stop must present the session id from start — stale stops can't kill newer streams. */
+  'camera:stop': { req: { sessionId: string }; res: void }
 
   'rss:getFeed': {
     req: { feedId: string }

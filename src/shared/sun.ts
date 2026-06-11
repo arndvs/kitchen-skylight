@@ -65,12 +65,10 @@ const FALLBACK_DARK_END = 7 * 60
 
 /** Should the display be dark right now under sun-based switching? */
 export function isNightAt(now: DateTime, location: { lat: number; lon: number } | null): boolean {
-  const minutes = now.hour * 60 + now.minute
-  if (!location) {
-    return minutes >= FALLBACK_DARK_START || minutes < FALLBACK_DARK_END
-  }
-  const times = sunTimes(location.lat, location.lon, now.toISODate()!, now.zoneName ?? 'utc')
+  const times = location ? sunTimes(location.lat, location.lon, now.toISODate()!, now.zoneName ?? 'utc') : null
   if (!times) {
+    // no location, or polar latitudes where the sun math has no answer
+    const minutes = now.hour * 60 + now.minute
     return minutes >= FALLBACK_DARK_START || minutes < FALLBACK_DARK_END
   }
   return now < times.sunrise || now >= times.sunset

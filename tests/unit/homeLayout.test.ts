@@ -95,6 +95,38 @@ describe('sanitizeLayout', () => {
     expect(result[1].config).toEqual({ listId: 'abc' })
   })
 
+  it('strips config keys a tile type does not declare', () => {
+    const result = sanitizeLayout([
+      { id: 'c', type: 'clock', x: 0, y: 0, w: 2, h: 2, config: { listId: 'abc' } },
+      { id: 'n', type: 'news', x: 2, y: 0, w: 4, h: 3, config: { feedId: 'npr', cameraId: 'smuggled' } }
+    ])
+    expect(result[0].config).toBeUndefined()
+    expect(result[1].config).toEqual({ feedId: 'npr' })
+  })
+
+  it('drops config values and ids the save schema would reject', () => {
+    const result = sanitizeLayout([
+      { id: 'a'.repeat(81), type: 'clock', x: 0, y: 0, w: 2, h: 2 }, // id too long → tile dropped
+      { id: 'n', type: 'news', x: 0, y: 0, w: 4, h: 3, config: { feedId: '' } }, // empty value → key dropped
+      { id: 'l', type: 'list', x: 4, y: 0, w: 3, h: 4, config: { listId: 'x'.repeat(81) } } // too long → key dropped
+    ])
+    expect(result).toHaveLength(2)
+    expect(result[0].config).toBeUndefined()
+    expect(result[1].config).toBeUndefined()
+  })
+
+  it('every config key declared in TILE_SPECS round-trips sanitization', () => {
+    // guards the recurring "forgot to wire a new config key" bug class
+    for (const [type, spec] of Object.entries(TILE_SPECS)) {
+      for (const key of spec.configKeys) {
+        const [tile] = sanitizeLayout([
+          { id: 't', type, x: 0, y: 0, w: spec.minW, h: spec.minH, config: { [key]: 'value-123' } }
+        ])
+        expect(tile.config?.[key], `${type}.${key}`).toBe('value-123')
+      }
+    }
+  })
+
   it('dedupes ids', () => {
     const result = sanitizeLayout([
       { id: 'a', type: 'clock', x: 0, y: 0, w: 2, h: 2 },

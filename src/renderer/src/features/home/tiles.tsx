@@ -16,6 +16,7 @@ import {
   useWeather
 } from '../../api/hooks'
 import { useCalendarData } from '../calendar/useCalendarData'
+import { useKioskState } from '../../stores/kioskStore'
 import { weatherIcon } from '../weather/WeatherHeader'
 import { SLOT_META } from '../meals/Meals'
 import { ZONE } from '../../stores/uiStore'
@@ -355,21 +356,29 @@ const CAMERA_RETRY_MS = 10_000
 
 export function CameraTile({ tile }: TileProps) {
   const cameraId = tile.config?.cameraId ?? null
-  const { data: cameras = [] } = useQuery({
+  const { data: cameras, isPending: camerasLoading } = useQuery({
     queryKey: ['cameras'],
     queryFn: () => ipcInvoke('camera:list', undefined)
   })
-  const camera = cameras.find((c) => c.id === cameraId)
+  const camera = (cameras ?? []).find((c) => c.id === cameraId)
+  // depend on stable scalars, not the array entry — unrelated cache refreshes
+  // must not tear down a live stream
+  const cameraFound = camera !== undefined
+  const covered = useKioskState((s) => s.covered)
   const videoRef = useRef<HTMLVideoElement>(null)
   const [status, setStatus] = useState<'connecting' | 'live' | 'error'>('connecting')
   const [retryKey, setRetryKey] = useState(0)
 
   useEffect(() => {
     const video = videoRef.current
-    if (!cameraId || !camera || !video || !mpegts.isSupported()) return
+    if (!cameraId || !cameraFound || !video || covered) return
+    if (!mpegts.isSupported()) {
+      setStatus('error')
+      return
+    }
     let player: mpegts.Player | null = null
     let stopped = false
-    let started = false
+    let sessionId: string | null = null
     let wentLive = false
     let retryTimer: number | undefined
     setStatus('connecting')
@@ -385,14 +394,14 @@ export function CameraTile({ tile }: TileProps) {
     }, 15_000)
 
     ipcInvoke('camera:start', { cameraId })
-      .then(({ wsUrl }) => {
+      .then((res) => {
         if (stopped) {
-          void ipcInvoke('camera:stop', { cameraId })
+          void ipcInvoke('camera:stop', { sessionId: res.sessionId })
           return
         }
-        started = true
+        sessionId = res.sessionId
         player = mpegts.createPlayer(
-          { type: 'mpegts', isLive: true, url: wsUrl },
+          { type: 'mpegts', isLive: true, url: res.wsUrl },
           { enableStashBuffer: false, liveBufferLatencyChasing: true, autoCleanupSourceBuffer: true }
         )
         player.attachMediaElement(video)
@@ -416,11 +425,12 @@ export function CameraTile({ tile }: TileProps) {
       } catch {
         // already torn down
       }
-      if (started) void ipcInvoke('camera:stop', { cameraId })
+      if (sessionId) void ipcInvoke('camera:stop', { sessionId })
     }
-  }, [cameraId, camera, retryKey])
+  }, [cameraId, cameraFound, covered, retryKey])
 
-  if (!cameraId || !camera) return <Placeholder>Camera not found — re-add this tile</Placeholder>
+  if (!cameraId || camerasLoading) return <Placeholder>Connecting…</Placeholder>
+  if (!camera) return <Placeholder>Camera not found — re-add this tile</Placeholder>
 
   return (
     <div className="relative -m-4 h-[calc(100%+2rem)] overflow-hidden bg-black/90">

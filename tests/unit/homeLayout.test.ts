@@ -1,0 +1,115 @@
+import { describe, expect, it } from 'vitest'
+import {
+  canPlace,
+  DEFAULT_HOME_LAYOUT,
+  findFreeSpot,
+  HOME_COLS,
+  HOME_ROWS,
+  inBounds,
+  rectsOverlap,
+  sanitizeLayout,
+  TILE_SPECS
+} from '../../src/shared/home'
+import type { HomeTile } from '../../src/shared/types'
+
+describe('rectsOverlap / inBounds', () => {
+  it('edge-touching rects do not overlap', () => {
+    expect(rectsOverlap({ x: 0, y: 0, w: 2, h: 2 }, { x: 2, y: 0, w: 2, h: 2 })).toBe(false)
+    expect(rectsOverlap({ x: 0, y: 0, w: 2, h: 2 }, { x: 0, y: 2, w: 2, h: 2 })).toBe(false)
+  })
+  it('intersecting rects overlap', () => {
+    expect(rectsOverlap({ x: 0, y: 0, w: 3, h: 3 }, { x: 2, y: 2, w: 2, h: 2 })).toBe(true)
+  })
+  it('bounds check', () => {
+    expect(inBounds({ x: 0, y: 0, w: HOME_COLS, h: HOME_ROWS })).toBe(true)
+    expect(inBounds({ x: 11, y: 0, w: 2, h: 1 })).toBe(false)
+    expect(inBounds({ x: -1, y: 0, w: 2, h: 1 })).toBe(false)
+    expect(inBounds({ x: 0, y: 0, w: 0, h: 1 })).toBe(false)
+  })
+})
+
+describe('canPlace', () => {
+  const layout: HomeTile[] = [{ id: 'a', type: 'clock', x: 0, y: 0, w: 2, h: 2 }]
+  it('rejects collisions and accepts adjacency', () => {
+    expect(canPlace(layout, { x: 1, y: 1, w: 2, h: 2 })).toBe(false)
+    expect(canPlace(layout, { x: 2, y: 0, w: 2, h: 2 })).toBe(true)
+  })
+  it('excludeId lets a tile drop onto its own footprint', () => {
+    expect(canPlace(layout, { x: 0, y: 0, w: 2, h: 2 }, 'a')).toBe(true)
+  })
+})
+
+describe('findFreeSpot', () => {
+  it('scans row-major', () => {
+    const layout: HomeTile[] = [{ id: 'a', type: 'clock', x: 0, y: 0, w: 2, h: 2 }]
+    expect(findFreeSpot(layout, 2, 2)).toEqual({ x: 2, y: 0 })
+  })
+  it('returns null on the full default layout', () => {
+    expect(findFreeSpot(DEFAULT_HOME_LAYOUT, 2, 2)).toBeNull()
+  })
+  it('finds the hole left by a removed tile', () => {
+    const layout = DEFAULT_HOME_LAYOUT.filter((t) => t.type !== 'clock')
+    expect(findFreeSpot(layout, 2, 2)).toEqual({ x: 9, y: 2 })
+  })
+})
+
+describe('sanitizeLayout', () => {
+  it('falls back to the default layout for non-arrays', () => {
+    expect(sanitizeLayout(null)).toBe(DEFAULT_HOME_LAYOUT)
+    expect(sanitizeLayout('garbage')).toBe(DEFAULT_HOME_LAYOUT)
+    expect(sanitizeLayout(undefined)).toBe(DEFAULT_HOME_LAYOUT)
+  })
+  it('passes a valid layout through unchanged', () => {
+    const result = sanitizeLayout(DEFAULT_HOME_LAYOUT)
+    expect(result).toEqual(DEFAULT_HOME_LAYOUT)
+  })
+  it('drops junk entries and unknown types', () => {
+    const result = sanitizeLayout([{}, 42, 'x', { id: 'z', type: 'nonsense', x: 0, y: 0, w: 2, h: 2 }])
+    expect(result).toEqual([])
+  })
+  it('clamps fractional and out-of-range coords', () => {
+    const [tile] = sanitizeLayout([{ id: 'c', type: 'clock', x: 11.7, y: -3, w: 2.2, h: 99 }])
+    expect(tile).toMatchObject({ x: 10, y: 0, w: 2, h: 6 })
+    expect(inBounds(tile)).toBe(true)
+  })
+  it('enforces per-type minimum sizes', () => {
+    const [tile] = sanitizeLayout([{ id: 'w', type: 'weekAgenda', x: 0, y: 0, w: 1, h: 1 }])
+    expect(tile.w).toBeGreaterThanOrEqual(TILE_SPECS.weekAgenda.minW)
+    expect(tile.h).toBeGreaterThanOrEqual(TILE_SPECS.weekAgenda.minH)
+  })
+  it('relocates overlapping tiles deterministically', () => {
+    const result = sanitizeLayout([
+      { id: 'a', type: 'clock', x: 0, y: 0, w: 2, h: 2 },
+      { id: 'b', type: 'weather', x: 0, y: 0, w: 2, h: 2 }
+    ])
+    expect(result).toHaveLength(2)
+    expect(canPlace(result.slice(0, 1), result[1], result[1].id)).toBe(true)
+    expect(result[1]).toMatchObject({ x: 2, y: 0 })
+  })
+  it('dedupes ids', () => {
+    const result = sanitizeLayout([
+      { id: 'a', type: 'clock', x: 0, y: 0, w: 2, h: 2 },
+      { id: 'a', type: 'weather', x: 4, y: 0, w: 2, h: 2 }
+    ])
+    expect(result).toHaveLength(1)
+  })
+})
+
+describe('DEFAULT_HOME_LAYOUT invariants', () => {
+  it('has no overlaps, stays in bounds, and respects min sizes', () => {
+    for (let i = 0; i < DEFAULT_HOME_LAYOUT.length; i++) {
+      const tile = DEFAULT_HOME_LAYOUT[i]
+      expect(inBounds(tile)).toBe(true)
+      const spec = TILE_SPECS[tile.type]
+      expect(tile.w).toBeGreaterThanOrEqual(spec.minW)
+      expect(tile.h).toBeGreaterThanOrEqual(spec.minH)
+      for (let j = i + 1; j < DEFAULT_HOME_LAYOUT.length; j++) {
+        expect(rectsOverlap(tile, DEFAULT_HOME_LAYOUT[j])).toBe(false)
+      }
+    }
+  })
+  it('covers the grid completely (72 cells)', () => {
+    const area = DEFAULT_HOME_LAYOUT.reduce((acc, t) => acc + t.w * t.h, 0)
+    expect(area).toBe(HOME_COLS * HOME_ROWS)
+  })
+})

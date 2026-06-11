@@ -31,7 +31,7 @@ interface UiState {
 const today = (): string => DateTime.now().setZone(ZONE).toISODate()!
 
 export const useUi = create<UiState>((set, get) => ({
-  view: 'week',
+  view: 'home',
   focusedDate: today(),
   hiddenPeople: [],
   editor: { mode: 'closed' },
@@ -42,6 +42,7 @@ export const useUi = create<UiState>((set, get) => ({
   goToday: () => set({ focusedDate: today() }),
   step: (direction) => {
     const { view, focusedDate } = get()
+    if (view === 'home' || view === 'lists') return
     const d = DateTime.fromISO(focusedDate, { zone: ZONE })
     const next =
       view === 'day' || view === 'chores'

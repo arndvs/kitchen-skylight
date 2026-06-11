@@ -19,6 +19,7 @@ function useNow(): DateTime {
 
 function periodLabel(view: CalendarViewKind, focusedDate: string, weekStartsOn: 0 | 1): string {
   const d = DateTime.fromISO(focusedDate, { zone: ZONE })
+  if (view === 'home' || view === 'lists') return ''
   if (view === 'day' || view === 'chores') return d.toFormat('LLL d')
   if (view === 'month') return d.toFormat('LLLL yyyy')
   if (view === 'agenda') return `From ${d.toFormat('LLL d')}`
@@ -94,8 +95,8 @@ export function Header() {
         </div>
       )}
 
-      {/* period nav (not meaningful on the Lists screen) */}
-      <div className={`flex shrink-0 items-center gap-1 rounded-2xl bg-paper-deep/70 p-1 ${view === 'lists' ? 'invisible' : ''}`}>
+      {/* period nav (not meaningful on Home or Lists) */}
+      <div className={`flex shrink-0 items-center gap-1 rounded-2xl bg-paper-deep/70 p-1 ${view === 'lists' || view === 'home' ? 'invisible' : ''}`}>
         <IconButton label="Previous" onClick={() => step(-1)}>
           <ChevronLeftIcon />
         </IconButton>
@@ -115,6 +116,7 @@ export function Header() {
         value={view}
         onChange={setView}
         options={[
+          { value: 'home', label: 'Home' },
           { value: 'day', label: 'Day' },
           { value: 'week', label: 'Week' },
           { value: 'month', label: 'Month' },

@@ -20,6 +20,8 @@ const app = await electron.launch({
 try {
   const page = await app.firstWindow()
   await page.waitForSelector('text=Week', { timeout: 15000 })
+  // the app boots to Home; event creation lives on the calendar views
+  await page.getByRole('button', { name: 'Week', exact: true }).click()
 
   // Open the editor via the FAB and create an event
   await page.getByLabel('Add event').click()

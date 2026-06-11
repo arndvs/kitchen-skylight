@@ -4,7 +4,13 @@ An open-source, fully standalone family calendar display — a [Skylight Calenda
 
 ## Status
 
-**All planned milestones (M0 – M6) complete**:
+**All planned milestones (M0 – M6) complete**, plus auto-update and a customizable home screen:
+
+- **Customizable Home screen** (the default view): a 12×6 tile dashboard you
+  arrange yourself — drag, resize, add, and remove tiles in a PIN-gated edit
+  mode with snap-to-grid ghosts. Nine tile types: today's events, this-week
+  agenda, weather, chores progress, star balances, any list, today's meals,
+  clock, and cycling photos. Tapping a tile jumps to its tab.
 
 - Week / Day / Month / Agenda (List) views, touch-first with ≥48px targets
 - Family member profiles with per-person colors and filter chips

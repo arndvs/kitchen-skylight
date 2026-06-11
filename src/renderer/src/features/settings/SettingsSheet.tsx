@@ -1043,6 +1043,17 @@ function GeneralTab() {
       <SleepSection />
       <ParentalLockSection />
       <div>
+        <FieldLabel>Default screen</FieldLabel>
+        <SegmentedControl
+          value={settings.defaultView === 'home' ? 'home' : 'week'}
+          onChange={(defaultView) => mutation.mutate({ defaultView })}
+          options={[
+            { value: 'home', label: 'Home' },
+            { value: 'week', label: 'Week' }
+          ]}
+        />
+      </div>
+      <div>
         <FieldLabel>Week starts on</FieldLabel>
         <SegmentedControl
           value={String(settings.weekStartsOn) as '0' | '1'}

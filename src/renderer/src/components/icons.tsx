@@ -136,6 +136,18 @@ export const StormIcon = (p: IconProps) => (
   </svg>
 )
 
+export const PencilIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M17 3a2.8 2.8 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5Z" />
+  </svg>
+)
+
+export const GripIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <path d="M20 8 8 20M20 14l-6 6" />
+  </svg>
+)
+
 export const LockIcon = (p: IconProps) => (
   <svg {...base(p)}>
     <rect x="4" y="11" width="16" height="10" rx="2" />

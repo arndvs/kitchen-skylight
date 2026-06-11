@@ -82,11 +82,32 @@ export const occurrenceQuerySchema = z.object({
   end: isoInstant
 })
 
+const homeTileSchema = z.object({
+  id: z.string().min(1).max(80),
+  type: z.enum([
+    'todayEvents',
+    'weekAgenda',
+    'weather',
+    'choresProgress',
+    'starBalances',
+    'list',
+    'meals',
+    'clock',
+    'photo'
+  ]),
+  x: z.number().int().min(0).max(11),
+  y: z.number().int().min(0).max(5),
+  w: z.number().int().min(1).max(12),
+  h: z.number().int().min(1).max(6),
+  config: z.object({ listId: z.string().min(1).optional() }).optional()
+})
+
 export const settingsPatchSchema = z.object({
   patch: z
     .object({
       weekStartsOn: z.union([z.literal(0), z.literal(1)]).optional(),
-      defaultView: z.enum(['day', 'week', 'month', 'agenda', 'chores', 'lists']).optional(),
+      defaultView: z.enum(['home', 'day', 'week', 'month', 'agenda', 'chores', 'lists']).optional(),
+      homeLayout: z.array(homeTileSchema).max(24).optional(),
       timeFormat: z.enum(['12h', '24h']).optional(),
       temperatureUnit: z.enum(['f', 'c']).optional(),
       weather: z.object({ lat: z.number(), lon: z.number(), label: z.string() }).nullable().optional(),

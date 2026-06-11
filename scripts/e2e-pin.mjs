@@ -29,7 +29,7 @@ try {
 
   // 1. no PIN yet — settings open directly; set PIN 2468 (entered twice)
   await page.getByLabel('Settings').click()
-  await page.getByRole('button', { name: 'General' }).click()
+  await page.getByRole('button', { name: 'General', exact: true }).click()
   await page.getByRole('button', { name: 'Set PIN' }).click()
   await enterPin('2468')
   await page.waitForSelector('text=Enter it once more', { timeout: 5000 })

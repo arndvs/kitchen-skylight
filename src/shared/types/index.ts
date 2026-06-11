@@ -144,7 +144,34 @@ export interface EventDeleteInput {
   occurrenceStart?: string
 }
 
-export type CalendarViewKind = 'day' | 'week' | 'month' | 'agenda' | 'chores' | 'lists'
+export type CalendarViewKind = 'home' | 'day' | 'week' | 'month' | 'agenda' | 'chores' | 'lists'
+
+export type HomeTileType =
+  | 'todayEvents'
+  | 'weekAgenda'
+  | 'weather'
+  | 'choresProgress'
+  | 'starBalances'
+  | 'list'
+  | 'meals'
+  | 'clock'
+  | 'photo'
+
+export interface HomeTileConfig {
+  /** 'list' tiles: which list to show */
+  listId?: string
+}
+
+export interface HomeTile {
+  id: string
+  type: HomeTileType
+  /** grid cell coords (0-based) and spans */
+  x: number
+  y: number
+  w: number
+  h: number
+  config?: HomeTileConfig
+}
 
 export type ListKind = 'grocery' | 'todo' | 'custom'
 
@@ -254,17 +281,21 @@ export interface AppSettings {
   sleep: { enabled: boolean; start: string; end: string }
   screensaver: { folder: string | null; idleMinutes: number }
   launchOnStartup: boolean
+  homeLayout: HomeTile[]
 }
+
+import { DEFAULT_HOME_LAYOUT } from '../home'
 
 export const DEFAULT_SETTINGS: AppSettings = {
   weekStartsOn: 0,
-  defaultView: 'week',
+  defaultView: 'home',
   timeFormat: '12h',
   temperatureUnit: 'f',
   weather: null,
   sleep: { enabled: false, start: '21:30', end: '06:30' },
   screensaver: { folder: null, idleMinutes: 10 },
-  launchOnStartup: false
+  launchOnStartup: false,
+  homeLayout: DEFAULT_HOME_LAYOUT
 }
 
 /** Touch-friendly person color palette (Skylight-style) */

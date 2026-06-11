@@ -24,7 +24,7 @@ try {
 
   // 1. add a child
   await page.getByLabel('Settings').click()
-  await page.getByRole('button', { name: 'Add family member' }).click()
+  await page.getByRole('button', { name: 'Add family member', exact: true }).click()
   await page.getByPlaceholder('Name').fill('Emma')
   await page.getByRole('button', { name: 'Save', exact: true }).click()
 

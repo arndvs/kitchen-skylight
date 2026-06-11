@@ -71,7 +71,7 @@ export function SegmentedControl<T extends string>({
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
-          className={`pressable min-h-11 rounded-xl px-4 text-base font-bold transition-colors ${
+          className={`pressable min-h-11 rounded-xl px-3 text-base font-bold transition-colors ${
             value === opt.value ? 'bg-card text-ink shadow-card' : 'text-ink-soft'
           }`}
         >

@@ -47,7 +47,7 @@ export function Header() {
   const weekStartsOn = settings?.weekStartsOn ?? 0
   const timeFormat = settings?.timeFormat ?? '12h'
   return (
-    <header className="flex items-center gap-5 px-6 pt-5 pb-4">
+    <header className="flex items-center gap-3 px-5 pt-5 pb-4">
       {/* Today, big and warm */}
       <button type="button" onClick={goToday} className="pressable shrink-0 text-left">
         <div className="font-display text-[2.6rem] leading-none font-semibold tracking-tight">
@@ -64,53 +64,48 @@ export function Header() {
 
       <div className="flex-1" />
 
-      {/* person filter chips */}
+      {/* person filter: compact avatar circles, never clipped (overlap when the family is large) */}
       {people.length > 0 && (
-        <div className="flex max-w-[34rem] items-center gap-2 overflow-x-auto">
+        <div className={`flex shrink-0 items-center ${people.length >= 4 ? '-space-x-2' : 'gap-1.5'}`}>
           {people.map((p) => {
             const hidden = hiddenPeople.includes(p.id)
             return (
               <button
                 key={p.id}
                 type="button"
+                aria-label={`${hidden ? 'Show' : 'Hide'} ${p.name}`}
+                title={p.name}
                 onClick={() => togglePerson(p.id)}
-                className={`pressable flex shrink-0 items-center gap-2 rounded-full py-1.5 pr-4 pl-1.5 text-base font-bold transition-all ${
-                  hidden ? 'bg-paper-deep text-ink-faint opacity-60' : 'shadow-card'
+                className={`pressable flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ring-2 ring-paper transition-all ${
+                  hidden ? 'opacity-35 grayscale' : 'shadow-card'
                 }`}
-                style={hidden ? undefined : { backgroundColor: p.color, color: textOn(p.color) }}
+                style={{ backgroundColor: p.color, color: textOn(p.color) }}
               >
-                <span
-                  className="flex h-9 w-9 items-center justify-center rounded-full text-sm font-extrabold"
-                  style={{
-                    backgroundColor: hidden ? 'var(--color-line)' : 'rgba(255,255,255,0.28)',
-                    color: hidden ? 'var(--color-ink-soft)' : 'inherit'
-                  }}
-                >
-                  {initials(p.name)}
-                </span>
-                {p.name}
+                {initials(p.name)}
               </button>
             )
           })}
         </div>
       )}
 
-      {/* period nav (not meaningful on Home or Lists) */}
-      <div className={`flex shrink-0 items-center gap-1 rounded-2xl bg-paper-deep/70 p-1 ${view === 'lists' || view === 'home' ? 'invisible' : ''}`}>
-        <IconButton label="Previous" onClick={() => step(-1)}>
-          <ChevronLeftIcon />
-        </IconButton>
-        <button
-          type="button"
-          onClick={goToday}
-          className="pressable min-w-28 rounded-xl px-2 py-2 text-center text-base font-extrabold text-ink"
-        >
-          {periodLabel(view, focusedDate, weekStartsOn)}
-        </button>
-        <IconButton label="Next" onClick={() => step(1)}>
-          <ChevronRightIcon />
-        </IconButton>
-      </div>
+      {/* period nav (removed from layout where it isn't meaningful — space matters here) */}
+      {view !== 'lists' && view !== 'home' && (
+        <div className="flex shrink-0 items-center gap-1 rounded-2xl bg-paper-deep/70 p-1">
+          <IconButton label="Previous" onClick={() => step(-1)}>
+            <ChevronLeftIcon />
+          </IconButton>
+          <button
+            type="button"
+            onClick={goToday}
+            className="pressable min-w-24 rounded-xl px-2 py-2 text-center text-base font-extrabold text-ink"
+          >
+            {periodLabel(view, focusedDate, weekStartsOn)}
+          </button>
+          <IconButton label="Next" onClick={() => step(1)}>
+            <ChevronRightIcon />
+          </IconButton>
+        </div>
+      )}
 
       <SegmentedControl
         value={view}

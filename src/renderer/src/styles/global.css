@@ -25,6 +25,39 @@
   --shadow-float: 0 4px 12px rgba(72, 60, 38, 0.14), 0 24px 56px -16px rgba(72, 60, 38, 0.28);
 }
 
+/* warm dark palette — applied from sunset to sunrise (or always, per settings) */
+.dark {
+  --color-paper: #17130e;
+  --color-paper-deep: #241e16;
+  --color-card: #262019;
+  --color-ink: #ece4d4;
+  --color-ink-soft: #b5a892;
+  --color-ink-faint: #7e7260;
+  --color-line: #3b332a;
+  --color-ember: #d95b3a;
+  --color-ember-deep: #f08a68;
+  --color-ember-soft: #4a2c20;
+  --color-sun: #6b5326;
+  --color-sun-soft: #332a1a;
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 10px 28px -10px rgba(0, 0, 0, 0.5);
+  --shadow-float: 0 4px 12px rgba(0, 0, 0, 0.45), 0 24px 56px -16px rgba(0, 0, 0, 0.65);
+}
+
+.dark body::before {
+  background:
+    radial-gradient(1200px 700px at 8% -10%, rgba(107, 83, 38, 0.18), transparent 60%),
+    radial-gradient(900px 600px at 105% 110%, rgba(217, 91, 58, 0.06), transparent 55%);
+}
+
+.dark body::after {
+  opacity: 0.25;
+}
+
+html {
+  background-color: var(--color-paper);
+  transition: background-color 0.6s ease;
+}
+
 html,
 body,
 #root {

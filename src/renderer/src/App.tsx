@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react'
 import { usePushInvalidation, useSettings } from './api/hooks'
+import { useTheme } from './lib/useTheme'
 import { useUi } from './stores/uiStore'
 import { HomeView } from './features/home/HomeView'
 import { Header, Fab } from './features/shell/Header'
@@ -18,6 +19,7 @@ import { OskTray } from './components/Osk'
 
 export default function App() {
   usePushInvalidation()
+  useTheme()
   const view = useUi((s) => s.view)
   const { data: settings } = useSettings()
 

@@ -277,6 +277,8 @@ export interface AppSettings {
   defaultView: CalendarViewKind
   timeFormat: '12h' | '24h'
   temperatureUnit: 'f' | 'c'
+  /** 'auto' = dark from sunset to sunrise (sun times from the weather location) */
+  theme: 'light' | 'dark' | 'auto'
   weather: { lat: number; lon: number; label: string } | null
   sleep: { enabled: boolean; start: string; end: string }
   screensaver: { folder: string | null; idleMinutes: number }
@@ -291,6 +293,7 @@ export const DEFAULT_SETTINGS: AppSettings = {
   defaultView: 'home',
   timeFormat: '12h',
   temperatureUnit: 'f',
+  theme: 'auto',
   weather: null,
   sleep: { enabled: false, start: '21:30', end: '06:30' },
   screensaver: { folder: null, idleMinutes: 10 },

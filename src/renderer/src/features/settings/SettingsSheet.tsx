@@ -1038,6 +1038,25 @@ function GeneralTab() {
   if (!settings) return null
   return (
     <div className="flex max-w-xl flex-col gap-6">
+      <div>
+        <FieldLabel>Appearance</FieldLabel>
+        <SegmentedControl
+          value={settings.theme}
+          onChange={(theme) => mutation.mutate({ theme })}
+          options={[
+            { value: 'light', label: 'Light' },
+            { value: 'dark', label: 'Dark' },
+            { value: 'auto', label: 'Sunset to sunrise' }
+          ]}
+        />
+        {settings.theme === 'auto' && (
+          <p className="mt-2 text-sm font-semibold text-ink-faint">
+            {settings.weather
+              ? `Sun times computed for ${settings.weather.label}.`
+              : 'No location set — using 7:00 pm to 7:00 am. Pick a weather location below for real sun times.'}
+          </p>
+        )}
+      </div>
       <WeatherSection />
       <ScreensaverSection />
       <SleepSection />

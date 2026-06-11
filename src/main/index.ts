@@ -17,6 +17,7 @@ import { createMealsService } from './services/mealsService'
 import { createKiosk } from './kiosk/kiosk'
 import { createUpdater } from './updater'
 import { createRssService } from './services/rssService'
+import { createCameraService } from './services/cameraService'
 import { createGoogleAuth } from './sync/googleAuth'
 import { createGoogleSync } from './sync/googleSync'
 import { createOutboxWorker } from './sync/outboxWorker'
@@ -47,6 +48,8 @@ if (!gotLock) {
     const settings = createSettingsService(db)
     const kiosk = createKiosk({ settings, broadcast })
     const updater = createUpdater({ broadcast })
+    const cameraService = createCameraService(settings)
+    app.on('will-quit', () => cameraService.shutdown())
     const choresService = createChoresService(db, deviceTz)
     const googleAuth = createGoogleAuth(db, settings)
     const googleSync = createGoogleSync({ db, auth: googleAuth, deviceTz })
@@ -82,7 +85,8 @@ if (!gotLock) {
       meals: createMealsService(db),
       kiosk,
       updater,
-      rss: createRssService()
+      rss: createRssService(),
+      camera: cameraService
     })
     createMainWindow()
     syncManager.start()

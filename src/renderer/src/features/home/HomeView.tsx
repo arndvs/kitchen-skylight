@@ -39,7 +39,8 @@ export function HomeView() {
   })
 
   const enterEdit = (): void => {
-    if (auth?.pinSet && !auth.unlocked) {
+    if (!auth) return // lock status not loaded yet — never fail open
+    if (auth.pinSet && !auth.unlocked) {
       setPinError(null)
       setPinPrompt(true)
     } else {

@@ -50,7 +50,13 @@ describe('chores + rewards', () => {
   })
 
   it('completing awards stars exactly once and uncompleting reverses', () => {
-    const chore = chores.create({ title: 'Dishes', personId: 'kid1', starsValue: 3, recurrence: { freq: 'daily' } })
+    const chore = chores.create({
+      title: 'Dishes',
+      personId: 'kid1',
+      starsValue: 3,
+      recurrence: { freq: 'daily' },
+      anchorDate: '2026-06-01' // fixed: getDay below uses fixed dates, so the anchor must not be "today"
+    })
     expect(chores.complete(chore.id, '2026-06-10').balance).toBe(3)
     expect(chores.complete(chore.id, '2026-06-10').balance).toBe(3) // idempotent
     expect(chores.complete(chore.id, '2026-06-11').balance).toBe(6) // different day counts

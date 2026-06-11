@@ -108,6 +108,13 @@ export type IpcContract = {
   'rewards:redemptions': { req: void; res: RedemptionDto[] }
   'rewards:grant': { req: { redemptionId: string }; res: void }
 
+  'camera:list': { req: void; res: { id: string; name: string }[] }
+  'camera:add': { req: { name: string; url: string }; res: { id: string; name: string } }
+  'camera:remove': { req: { cameraId: string }; res: void }
+  /** Start (or join) the stream; returns the local WebSocket URL the tile plays from. */
+  'camera:start': { req: { cameraId: string }; res: { wsUrl: string } }
+  'camera:stop': { req: { cameraId: string }; res: void }
+
   'rss:getFeed': {
     req: { feedId: string }
     res: {
@@ -182,7 +189,8 @@ export const ALLOWED_CHANNEL_PREFIXES = [
   'meals:',
   'screensaver:',
   'kiosk:',
-  'rss:'
+  'rss:',
+  'camera:'
 ] as const
 
 /** Envelope used for every invoke result so errors cross the bridge cleanly. */

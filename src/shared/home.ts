@@ -26,7 +26,8 @@ export const TILE_SPECS: Record<HomeTileType, TileSpec> = {
   meals: { minW: 2, minH: 2, defaultW: 3, defaultH: 2, allowMultiple: false },
   clock: { minW: 2, minH: 2, defaultW: 2, defaultH: 2, allowMultiple: false },
   photo: { minW: 2, minH: 2, defaultW: 3, defaultH: 4, allowMultiple: true },
-  news: { minW: 3, minH: 2, defaultW: 4, defaultH: 3, allowMultiple: true }
+  news: { minW: 3, minH: 2, defaultW: 4, defaultH: 3, allowMultiple: true },
+  camera: { minW: 3, minH: 2, defaultW: 4, defaultH: 3, allowMultiple: true }
 }
 
 /** Tiles the full 12x6 grid with no gaps; list/photo stay in the Add Tile sheet. */
@@ -114,7 +115,8 @@ export function sanitizeLayout(raw: unknown): HomeTile[] {
       const raw = t.config as Record<string, unknown>
       config = {
         ...(typeof raw.listId === 'string' ? { listId: raw.listId } : {}),
-        ...(typeof raw.feedId === 'string' ? { feedId: raw.feedId } : {})
+        ...(typeof raw.feedId === 'string' ? { feedId: raw.feedId } : {}),
+        ...(typeof raw.cameraId === 'string' ? { cameraId: raw.cameraId } : {})
       }
     }
     out.push({

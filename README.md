@@ -8,9 +8,16 @@ An open-source, fully standalone family calendar display — a [Skylight Calenda
 
 - **Customizable Home screen** (the default view): a 12×6 tile dashboard you
   arrange yourself — drag, resize, add, and remove tiles in a PIN-gated edit
-  mode with snap-to-grid ghosts. Nine tile types: today's events, this-week
+  mode with snap-to-grid ghosts. Eleven tile types: today's events, this-week
   agenda, weather, chores progress, star balances, any list, today's meals,
-  clock, and cycling photos. Tapping a tile jumps to its tab.
+  clock, cycling photos, news headlines, and live cameras. Tapping a tile
+  jumps to its tab.
+- **IP camera tiles (RTSP)**: add any camera's rtsp:// URL and watch it live on
+  the home screen (~1s latency). The bundled ffmpeg remuxes the camera's H.264
+  stream without transcoding (near-zero CPU) to a token-guarded localhost
+  WebSocket; camera URLs (which contain credentials) are DPAPI-encrypted and
+  never leave the main process. Cameras must provide an H.264 stream (set the
+  camera substream to H.264 if tiles show "unavailable").
 
 - Week / Day / Month / Agenda (List) views, touch-first with ≥48px targets
 - Family member profiles with per-person colors and filter chips

@@ -94,18 +94,34 @@ const homeTileSchema = z.object({
     'meals',
     'clock',
     'photo',
-    'news'
+    'news',
+    'camera'
   ]),
   x: z.number().int().min(0).max(11),
   y: z.number().int().min(0).max(5),
   w: z.number().int().min(1).max(12),
   h: z.number().int().min(1).max(6),
   config: z
-    .object({ listId: z.string().min(1).optional(), feedId: z.string().min(1).max(40).optional() })
+    .object({
+      listId: z.string().min(1).optional(),
+      feedId: z.string().min(1).max(40).optional(),
+      cameraId: z.string().min(1).max(80).optional()
+    })
     .optional()
 })
 
 export const rssFeedSchema = z.object({ feedId: z.string().min(1).max(40) })
+
+export const cameraAddSchema = z.object({
+  name: z.string().trim().min(1).max(60),
+  url: z
+    .string()
+    .trim()
+    .max(500)
+    .regex(/^rtsps?:\/\/.+/i, 'Must be an rtsp:// or rtsps:// URL')
+})
+
+export const cameraIdSchema = z.object({ cameraId: id })
 
 export const settingsPatchSchema = z.object({
   patch: z

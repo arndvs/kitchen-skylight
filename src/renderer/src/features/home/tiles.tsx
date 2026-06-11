@@ -1,6 +1,7 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { DateTime } from 'luxon'
 import { useQuery } from '@tanstack/react-query'
+import mpegts from 'mpegts.js'
 import type { HomeTile } from '@shared/types'
 import { presetById } from '@shared/rss'
 import { agendaRange, dayRange, eachDay } from '@shared/dates'
@@ -345,6 +346,93 @@ export function NewsTile({ tile, compact }: TileProps) {
             </div>
           ))}
         </div>
+      )}
+    </div>
+  )
+}
+
+const CAMERA_RETRY_MS = 10_000
+
+export function CameraTile({ tile }: TileProps) {
+  const cameraId = tile.config?.cameraId ?? null
+  const { data: cameras = [] } = useQuery({
+    queryKey: ['cameras'],
+    queryFn: () => ipcInvoke('camera:list', undefined)
+  })
+  const camera = cameras.find((c) => c.id === cameraId)
+  const videoRef = useRef<HTMLVideoElement>(null)
+  const [status, setStatus] = useState<'connecting' | 'live' | 'error'>('connecting')
+  const [retryKey, setRetryKey] = useState(0)
+
+  useEffect(() => {
+    const video = videoRef.current
+    if (!cameraId || !camera || !video || !mpegts.isSupported()) return
+    let player: mpegts.Player | null = null
+    let stopped = false
+    let started = false
+    let wentLive = false
+    let retryTimer: number | undefined
+    setStatus('connecting')
+
+    const fail = (): void => {
+      if (stopped || retryTimer !== undefined) return
+      setStatus('error')
+      retryTimer = window.setTimeout(() => setRetryKey((k) => k + 1), CAMERA_RETRY_MS)
+    }
+    // a stream that never produces media within 15s is dead — retry
+    const watchdog = window.setTimeout(() => {
+      if (!wentLive) fail()
+    }, 15_000)
+
+    ipcInvoke('camera:start', { cameraId })
+      .then(({ wsUrl }) => {
+        if (stopped) {
+          void ipcInvoke('camera:stop', { cameraId })
+          return
+        }
+        started = true
+        player = mpegts.createPlayer(
+          { type: 'mpegts', isLive: true, url: wsUrl },
+          { enableStashBuffer: false, liveBufferLatencyChasing: true, autoCleanupSourceBuffer: true }
+        )
+        player.attachMediaElement(video)
+        player.on(mpegts.Events.ERROR, fail)
+        player.on(mpegts.Events.MEDIA_INFO, () => {
+          if (stopped) return
+          wentLive = true
+          setStatus('live')
+        })
+        player.load()
+        void player.play()?.catch(() => undefined)
+      })
+      .catch(fail)
+
+    return () => {
+      stopped = true
+      window.clearTimeout(watchdog)
+      if (retryTimer) window.clearTimeout(retryTimer)
+      try {
+        player?.destroy()
+      } catch {
+        // already torn down
+      }
+      if (started) void ipcInvoke('camera:stop', { cameraId })
+    }
+  }, [cameraId, camera, retryKey])
+
+  if (!cameraId || !camera) return <Placeholder>Camera not found — re-add this tile</Placeholder>
+
+  return (
+    <div className="relative -m-4 h-[calc(100%+2rem)] overflow-hidden bg-black/90">
+      <video ref={videoRef} muted autoPlay playsInline className="h-full w-full object-cover" />
+      <span className="absolute top-2 left-2 rounded-full bg-black/55 px-2.5 py-1 text-xs font-extrabold text-white/90">
+        {camera.name}
+        {status === 'live' && <span className="ml-1.5 inline-block h-2 w-2 rounded-full bg-[#e5484d] align-middle" />}
+      </span>
+      {status !== 'live' && (
+        <span className="absolute inset-0 flex items-center justify-center text-sm font-bold text-white/70">
+          {status === 'connecting' ? 'Connecting…' : 'Camera unavailable — retrying'}
+        </span>
       )}
     </div>
   )

@@ -157,12 +157,20 @@ export type HomeTileType =
   | 'clock'
   | 'photo'
   | 'news'
+  | 'camera'
 
 export interface HomeTileConfig {
   /** 'list' tiles: which list to show */
   listId?: string
   /** 'news' tiles: which preset feed (see shared/rss.ts) */
   feedId?: string
+  /** 'camera' tiles: which configured camera to stream */
+  cameraId?: string
+}
+
+export interface CameraDto {
+  id: string
+  name: string
 }
 
 export interface HomeTile {

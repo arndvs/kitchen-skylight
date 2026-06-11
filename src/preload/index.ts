@@ -19,7 +19,8 @@ const ALLOWED_INVOKE_PREFIXES = [
   'meals:',
   'screensaver:',
   'kiosk:',
-  'rss:'
+  'rss:',
+  'camera:'
 ]
 const PUSH_PREFIX = 'push:'
 

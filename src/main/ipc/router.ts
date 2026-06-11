@@ -22,6 +22,7 @@ import type { MealsService } from '../services/mealsService'
 import type { Kiosk } from '../kiosk/kiosk'
 import type { Updater } from '../updater'
 import type { RssService } from '../services/rssService'
+import type { CameraService } from '../services/cameraService'
 
 export interface Services {
   settings: SettingsService
@@ -41,6 +42,7 @@ export interface Services {
   kiosk: Kiosk
   updater: Updater
   rss: RssService
+  camera: CameraService
 }
 
 /**
@@ -68,7 +70,9 @@ const PARENT_GATED: Set<IpcChannel> = new Set([
   'rewards:update',
   'rewards:delete',
   'rewards:grant',
-  'screensaver:pickFolder'
+  'screensaver:pickFolder',
+  'camera:add',
+  'camera:remove'
 ])
 
 /** Channels that mutate data, mapped to the domain the renderer should refetch. */
@@ -220,6 +224,12 @@ export function registerIpcHandlers(services: Services): void {
   handle('meals:set', s.mealSetSchema, (req) => services.meals.set(req.date, req.slot, req.text))
 
   handle('rss:getFeed', s.rssFeedSchema, (req) => services.rss.getFeed(req.feedId))
+
+  handle('camera:list', null, () => services.camera.list())
+  handle('camera:add', s.cameraAddSchema, (req) => services.camera.add(req.name, req.url))
+  handle('camera:remove', s.cameraIdSchema, (req) => services.camera.remove(req.cameraId))
+  handle('camera:start', s.cameraIdSchema, (req) => services.camera.start(req.cameraId))
+  handle('camera:stop', s.cameraIdSchema, (req) => services.camera.stop(req.cameraId))
 
   handle('weather:get', null, () => services.weather.get())
   handle('weather:searchCity', s.citySearchSchema, (req) => services.weather.searchCity(req.query))

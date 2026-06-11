@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import type { CalendarViewKind, HomeTileType } from '@shared/types'
 import {
+  CameraTile,
   ChoresProgressTile,
   ClockTile,
   ListTile,
@@ -78,5 +79,10 @@ export const TILE_REGISTRY: Record<HomeTileType, TileMeta> = {
     label: 'News headlines',
     description: 'Top stories from a news feed you pick',
     component: NewsTile
+  },
+  camera: {
+    label: 'Camera',
+    description: 'Live view from an IP camera (RTSP)',
+    component: CameraTile
   }
 }

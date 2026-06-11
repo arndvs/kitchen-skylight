@@ -392,6 +392,15 @@ export function CameraTile({ tile }: TileProps) {
     const watchdog = window.setTimeout(() => {
       if (!wentLive) fail()
     }, 15_000)
+    // the <video> element rendering frames is the ground truth for liveness:
+    // some streams (e.g. UniFi Protect) play fine without mpegts.js ever
+    // emitting MEDIA_INFO, and the watchdog must not kill those
+    const goLive = (): void => {
+      if (stopped) return
+      wentLive = true
+      setStatus('live')
+    }
+    video.addEventListener('playing', goLive)
 
     ipcInvoke('camera:start', { cameraId })
       .then((res) => {
@@ -406,11 +415,7 @@ export function CameraTile({ tile }: TileProps) {
         )
         player.attachMediaElement(video)
         player.on(mpegts.Events.ERROR, fail)
-        player.on(mpegts.Events.MEDIA_INFO, () => {
-          if (stopped) return
-          wentLive = true
-          setStatus('live')
-        })
+        player.on(mpegts.Events.MEDIA_INFO, goLive)
         player.load()
         void player.play()?.catch(() => undefined)
       })
@@ -418,6 +423,7 @@ export function CameraTile({ tile }: TileProps) {
 
     return () => {
       stopped = true
+      video.removeEventListener('playing', goLive)
       window.clearTimeout(watchdog)
       if (retryTimer) window.clearTimeout(retryTimer)
       try {

@@ -34,15 +34,14 @@ export const TILE_SPECS: Record<HomeTileType, TileSpec> = {
   camera: { minW: 3, minH: 2, defaultW: 4, defaultH: 3, allowMultiple: true, configKeys: ['cameraId'] }
 }
 
-/** Tiles the full 12x6 grid with no gaps; list/photo stay in the Add Tile sheet. */
+/** Tiles the full 12x6 grid with no gaps. Clock/weather tiles are NOT placed by
+ * default — the header already shows both — but stay in the Add Tile sheet. */
 export const DEFAULT_HOME_LAYOUT: HomeTile[] = [
   { id: 'default-todayEvents', type: 'todayEvents', x: 0, y: 0, w: 4, h: 6 },
-  { id: 'default-weekAgenda', type: 'weekAgenda', x: 4, y: 0, w: 5, h: 4 },
-  { id: 'default-weather', type: 'weather', x: 9, y: 0, w: 3, h: 2 },
-  { id: 'default-clock', type: 'clock', x: 9, y: 2, w: 3, h: 2 },
-  { id: 'default-meals', type: 'meals', x: 4, y: 4, w: 3, h: 2 },
-  { id: 'default-choresProgress', type: 'choresProgress', x: 7, y: 4, w: 3, h: 2 },
-  { id: 'default-starBalances', type: 'starBalances', x: 10, y: 4, w: 2, h: 2 }
+  { id: 'default-weekAgenda', type: 'weekAgenda', x: 4, y: 0, w: 5, h: 6 },
+  { id: 'default-meals', type: 'meals', x: 9, y: 0, w: 3, h: 2 },
+  { id: 'default-choresProgress', type: 'choresProgress', x: 9, y: 2, w: 3, h: 2 },
+  { id: 'default-starBalances', type: 'starBalances', x: 9, y: 4, w: 3, h: 2 }
 ]
 
 export interface Rect {

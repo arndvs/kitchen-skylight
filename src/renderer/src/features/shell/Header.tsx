@@ -47,16 +47,29 @@ export function Header() {
   const weekStartsOn = settings?.weekStartsOn ?? 0
   const timeFormat = settings?.timeFormat ?? '12h'
   return (
-    <header className="flex items-center gap-3 px-5 pt-5 pb-4">
-      {/* Today, big and warm */}
-      <button type="button" onClick={goToday} className="pressable shrink-0 text-left">
-        <div className="font-display text-[2.6rem] leading-none font-semibold tracking-tight">
-          {now.toFormat('cccc')}
+    <header className="flex items-center gap-2 px-4 pt-5 pb-4 min-[1500px]:gap-3 min-[1500px]:px-5">
+      {/* Today + a big clock (the header is the only clock since the home
+          screen dropped its clock tile); scales down so everything still
+          fits on 1280-wide displays */}
+      <button type="button" onClick={goToday} className="pressable flex shrink-0 items-center gap-3 text-left min-[1500px]:gap-4">
+        <div>
+          <div className="font-display text-[2.05rem] leading-none font-semibold tracking-tight min-[1500px]:text-[2.6rem]">
+            {now.toFormat('cccc')}
+          </div>
+          <div className="mt-1 text-base font-bold text-ink-soft min-[1500px]:text-lg">{now.toFormat('LLLL d')}</div>
         </div>
-        <div className="mt-1 text-lg font-bold text-ink-soft">
-          {now.toFormat('LLLL d')}
-          <span className="mx-2 text-ink-faint">·</span>
-          {timeFormat === '24h' ? now.toFormat('HH:mm') : now.toFormat('h:mm a').toLowerCase()}
+        <div className="w-px self-stretch bg-ink-faint/30" />
+        <div className="font-display text-[2.05rem] leading-none font-semibold tracking-tight tabular-nums min-[1500px]:text-[3.1rem]">
+          {timeFormat === '24h' ? (
+            now.toFormat('HH:mm')
+          ) : (
+            <>
+              {now.toFormat('h:mm')}
+              <span className="ml-1 text-lg font-bold text-ink-soft min-[1500px]:ml-1.5 min-[1500px]:text-2xl">
+                {now.toFormat('a').toLowerCase()}
+              </span>
+            </>
+          )}
         </div>
       </button>
 
@@ -97,7 +110,7 @@ export function Header() {
           <button
             type="button"
             onClick={goToday}
-            className="pressable min-w-24 rounded-xl px-2 py-2 text-center text-base font-extrabold text-ink"
+            className="pressable min-w-16 rounded-xl px-2 py-2 text-center text-base font-extrabold text-ink min-[1500px]:min-w-24"
           >
             {periodLabel(view, focusedDate, weekStartsOn)}
           </button>

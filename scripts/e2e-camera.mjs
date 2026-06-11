@@ -20,7 +20,7 @@ async function launch() {
     env: { ...process.env, OSL_USER_DATA: userData }
   })
   const page = await app.firstWindow()
-  await page.waitForSelector('[data-tile-type="clock"]', { timeout: 15000 })
+  await page.waitForSelector('[data-tile-type="todayEvents"]', { timeout: 15000 })
   return { app, page }
 }
 

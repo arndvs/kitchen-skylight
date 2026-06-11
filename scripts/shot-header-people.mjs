@@ -18,7 +18,7 @@ const app = await electron.launch({
 })
 try {
   const page = await app.firstWindow()
-  await page.waitForSelector('[data-tile-type="clock"]', { timeout: 15000 })
+  await page.waitForSelector('[data-tile-type="todayEvents"]', { timeout: 15000 })
   await page.evaluate(async () => {
     const people = [
       ['Emma', '#46A758'],
@@ -33,7 +33,7 @@ try {
     await window.osl.invoke('settings:set', { patch: { theme: 'light' } })
   })
   await page.reload()
-  await page.waitForSelector('[data-tile-type="clock"]', { timeout: 15000 })
+  await page.waitForSelector('[data-tile-type="todayEvents"]', { timeout: 15000 })
   await page.waitForTimeout(600)
   const header = await page.locator('header').boundingBox()
   const clip = { x: 0, y: 0, width: 1280, height: Math.ceil(header.y + header.height + 8) }

@@ -4,8 +4,9 @@ An open-source, fully standalone family calendar display — a [Skylight Calenda
 
 ## What it looks like
 
-The customizable home screen — drag-and-drop tiles for today's events, the week
-ahead, weather, meals, chores progress, and star balances:
+The customizable home screen — a big clock and a 3-day weather glance in the
+header, with drag-and-drop tiles for today's events, the week ahead, meals,
+chores progress, and star balances:
 
 ![Home screen](docs/screenshots/home.png)
 
@@ -33,7 +34,8 @@ which seeds demo data through the app's real IPC layer — so they stay honest.
   arrange yourself — drag, resize, add, and remove tiles in a PIN-gated edit
   mode with snap-to-grid ghosts. Eleven tile types: today's events, this-week
   agenda, weather, chores progress, star balances, any list, today's meals,
-  clock, cycling photos, news headlines, and live cameras. Tapping a tile
+  clock, cycling photos, news headlines, and live cameras (clock and weather
+  tiles are off by default — the header already shows both). Tapping a tile
   jumps to its tab.
 - **IP camera tiles (RTSP)**: add any camera's rtsp:// URL and watch it live on
   the home screen (~1s latency). The bundled ffmpeg remuxes the camera's H.264
@@ -52,8 +54,9 @@ which seeds demo data through the app's real IPC layer — so they stay honest.
   push of local edits with If-Match etags and last-writer-wins conflict
   resolution, person assignments round-tripped via extended properties
 - **ICS feed subscriptions** (read-only, conditional GET, 30-minute refresh)
-- **Weather header** via Open-Meteo (no API key): current conditions next to the
-  date, tap for a 5-day forecast; city search and °F/°C in settings
+- **Weather header** via Open-Meteo (no API key): current conditions plus the
+  next two days right in the header (on wide displays), tap for the full 5-day
+  forecast; city search and °F/°C in settings
 - **Parental PIN lock** (scrypt-hashed, enforced in the main process): settings,
   calendar/people management, and sync configuration sit behind a 4–8 digit PIN
 - **Chores & routines**: per-child daily/weekly/one-time chores grouped into

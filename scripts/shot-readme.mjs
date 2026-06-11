@@ -26,7 +26,7 @@ try {
     win.setContentSize(1600, 960)
     win.center()
   })
-  await page.waitForSelector('[data-tile-type="clock"]', { timeout: 15000 })
+  await page.waitForSelector('[data-tile-type="todayEvents"]', { timeout: 15000 })
 
   // ---- seed a believable family through the real IPC layer ----------------
   await page.evaluate(async () => {
@@ -129,7 +129,7 @@ try {
 
   // seeding bypassed React Query — reload to refetch, let weather/news settle
   await page.reload()
-  await page.waitForSelector('[data-tile-type="clock"]', { timeout: 15000 })
+  await page.waitForSelector('[data-tile-type="todayEvents"]', { timeout: 15000 })
   await page.waitForTimeout(3000)
 
   const shot = (name) => page.screenshot({ path: join(outDir, name) })
@@ -150,7 +150,7 @@ try {
   await page.waitForTimeout(800)
   await shot('editor.png')
   await page.reload() // dismiss the sheet; boots back to home
-  await page.waitForSelector('[data-tile-type="clock"]', { timeout: 15000 })
+  await page.waitForSelector('[data-tile-type="todayEvents"]', { timeout: 15000 })
 
   // 4-6. month, chores, lists
   await go('Month')
@@ -160,11 +160,11 @@ try {
   await go('Lists')
   await shot('lists.png')
 
-  // 7. dark mode home, with a news tile swapped in for the clock
+  // 7. dark mode home, with a news tile swapped in for the star balances
   await page.evaluate(async () => {
     const settings = (await window.osl.invoke('settings:getAll', undefined)).data
     const layout = settings.homeLayout.map((t) =>
-      t.id === 'default-clock'
+      t.id === 'default-starBalances'
         ? { id: 'shot-news', type: 'news', x: t.x, y: t.y, w: t.w, h: t.h, config: { feedId: 'npr' } }
         : t
     )

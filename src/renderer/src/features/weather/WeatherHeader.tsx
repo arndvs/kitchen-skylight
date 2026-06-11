@@ -38,11 +38,30 @@ export function WeatherButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="pressable flex items-center gap-2 rounded-2xl px-3 py-2 hover:bg-paper-deep/70"
+        className="pressable flex items-center gap-2 rounded-2xl px-3 py-1.5 hover:bg-paper-deep/70"
         aria-label="Weather forecast"
       >
         <Icon size={34} className="text-ember-deep" />
         <span className="font-display text-3xl leading-none">{weather.temperature}°</span>
+        {/* hidden on narrow displays — the tap-for-forecast dialog still has all 5 days */}
+        {weather.daily.length > 1 && (
+          <span className="ml-1 hidden items-center gap-2.5 border-l border-ink-faint/30 pl-3 min-[1500px]:flex">
+            {weather.daily.slice(1, 3).map((d) => {
+              const DayIcon = weatherIcon(d.code, true)
+              return (
+                <span key={d.date} className="flex flex-col items-center gap-0.5">
+                  <span className="text-[10px] leading-none font-extrabold text-ink-faint uppercase">
+                    {DateTime.fromISO(d.date).toFormat('ccc')}
+                  </span>
+                  <DayIcon size={17} className="text-ember-deep" />
+                  <span className="text-[11px] leading-none font-bold">
+                    {d.high}°<span className="text-ink-faint"> {d.low}°</span>
+                  </span>
+                </span>
+              )
+            })}
+          </span>
+        )}
       </button>
 
       <Dialog open={open} onClose={() => setOpen(false)} title={weather.label}>

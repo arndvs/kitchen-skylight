@@ -17,7 +17,7 @@ const app = await electron.launch({
 })
 try {
   const page = await app.firstWindow()
-  await page.waitForSelector('[data-tile-type="clock"]', { timeout: 15000 })
+  await page.waitForSelector('[data-tile-type="todayEvents"]', { timeout: 15000 })
   await page.evaluate(async () => {
     const inv = (ch, p) => window.osl.invoke(ch, p)
     const day = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().slice(0, 10)
@@ -49,7 +49,7 @@ try {
   })
   // seeding bypassed React Query, so reload to refetch everything
   await page.reload()
-  await page.waitForSelector('[data-tile-type="clock"]', { timeout: 15000 })
+  await page.waitForSelector('[data-tile-type="todayEvents"]', { timeout: 15000 })
   await page.waitForTimeout(900)
   await page.screenshot({ path: 'shots/home-populated.png' })
   console.log('screenshot saved')

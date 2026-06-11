@@ -19,7 +19,7 @@ const app = await electron.launch({
 
 try {
   const page = await app.firstWindow()
-  await page.waitForSelector('[data-tile-type="clock"]', { timeout: 15000 })
+  await page.waitForSelector('[data-tile-type="todayEvents"]', { timeout: 15000 })
 
   const setTheme = (theme) =>
     page.evaluate((t) => window.osl.invoke('settings:set', { patch: { theme: t } }), theme)

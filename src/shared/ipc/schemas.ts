@@ -138,7 +138,8 @@ export const settingsPatchSchema = z.object({
       weather: z.object({ lat: z.number(), lon: z.number(), label: z.string() }).nullable().optional(),
       sleep: z.object({ enabled: z.boolean(), start: z.string(), end: z.string() }).optional(),
       screensaver: z.object({ folder: z.string().nullable(), idleMinutes: z.number().int().min(1).max(120) }).optional(),
-      launchOnStartup: z.boolean().optional()
+      launchOnStartup: z.boolean().optional(),
+      companion: z.object({ enabled: z.boolean(), port: z.number().int().min(1024).max(65535) }).optional()
     })
     .strict()
 })

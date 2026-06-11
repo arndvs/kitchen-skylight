@@ -144,6 +144,14 @@ export type IpcContract = {
   'screensaver:listPhotos': { req: void; res: string[] }
   'kiosk:previewScreensaver': { req: void; res: void }
 
+  'companion:getStatus': {
+    req: void
+    res: { running: boolean; port: number; urls: string[]; pairedCount: number; lastError: string | null }
+  }
+  /** Mints a fresh pairing token (parent-gated); the token only ever lives in the URL fragment. */
+  'companion:issueToken': { req: void; res: { url: string } }
+  'companion:unpairAll': { req: void; res: void }
+
   'auth:getStatus': { req: void; res: { pinSet: boolean; unlocked: boolean } }
   'auth:verifyPin': { req: { pin: string }; res: { valid: boolean } }
   'auth:setPin': { req: { pin: string | null }; res: void }
@@ -191,7 +199,8 @@ export const ALLOWED_CHANNEL_PREFIXES = [
   'screensaver:',
   'kiosk:',
   'rss:',
-  'camera:'
+  'camera:',
+  'companion:'
 ] as const
 
 /** Envelope used for every invoke result so errors cross the bridge cleanly. */

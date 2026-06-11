@@ -1,0 +1,47 @@
+@import '@fontsource-variable/nunito';
+@import '@fontsource-variable/fraunces';
+@import 'tailwindcss';
+@import '../../shared/styles/tokens.css';
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+html {
+  background-color: var(--color-paper);
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--color-paper);
+  color: var(--color-ink);
+  overscroll-behavior-y: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+@utility pressable {
+  transition:
+    transform 0.13s ease,
+    box-shadow 0.13s ease,
+    background-color 0.13s ease;
+  &:active {
+    transform: scale(0.96);
+  }
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-rise {
+  animation: rise 0.45s cubic-bezier(0.22, 1, 0.36, 1) backwards;
+}

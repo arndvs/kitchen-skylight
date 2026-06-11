@@ -1,47 +1,7 @@
 @import '@fontsource-variable/nunito';
 @import '@fontsource-variable/fraunces';
 @import 'tailwindcss';
-
-@theme {
-  --font-sans: 'Nunito Variable', ui-sans-serif, system-ui, sans-serif;
-  --font-display: 'Fraunces Variable', Georgia, 'Times New Roman', serif;
-
-  /* warm paper-planner palette */
-  --color-paper: #f5efe3;
-  --color-paper-deep: #ece4d2;
-  --color-card: #fffdf8;
-  --color-ink: #34302a;
-  --color-ink-soft: #756d5f;
-  --color-ink-faint: #a89f8d;
-  --color-line: #e3dac6;
-  --color-ember: #d95b3a;
-  --color-ember-deep: #bf4526;
-  --color-ember-soft: #f8ddd2;
-  --color-sun: #ffd9a0;
-  --color-sun-soft: #fdf0da;
-
-  --radius-card: 1.25rem;
-  --shadow-card: 0 1px 3px rgba(72, 60, 38, 0.07), 0 10px 28px -10px rgba(72, 60, 38, 0.16);
-  --shadow-float: 0 4px 12px rgba(72, 60, 38, 0.14), 0 24px 56px -16px rgba(72, 60, 38, 0.28);
-}
-
-/* warm dark palette — applied from sunset to sunrise (or always, per settings) */
-.dark {
-  --color-paper: #17130e;
-  --color-paper-deep: #241e16;
-  --color-card: #262019;
-  --color-ink: #ece4d4;
-  --color-ink-soft: #b5a892;
-  --color-ink-faint: #7e7260;
-  --color-line: #3b332a;
-  --color-ember: #d95b3a;
-  --color-ember-deep: #f08a68;
-  --color-ember-soft: #4a2c20;
-  --color-sun: #6b5326;
-  --color-sun-soft: #332a1a;
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.3), 0 10px 28px -10px rgba(0, 0, 0, 0.5);
-  --shadow-float: 0 4px 12px rgba(0, 0, 0, 0.45), 0 24px 56px -16px rgba(0, 0, 0, 0.65);
-}
+@import '../../../shared/styles/tokens.css';
 
 .dark body::before {
   background:

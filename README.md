@@ -23,6 +23,12 @@ swapped in):
 | --- | --- | --- |
 | ![Month view](docs/screenshots/month.png) | ![Chores](docs/screenshots/chores.png) | ![Lists](docs/screenshots/lists.png) |
 
+The phone companion app (pair by QR, served by the display itself — no cloud):
+
+| Lists on your phone | Chores on your phone |
+| --- | --- |
+| ![Companion lists](docs/screenshots/companion-lists.png) | ![Companion chores](docs/screenshots/companion-chores.png) |
+
 Every screenshot is generated from a clean install by `node scripts/shot-readme.mjs`,
 which seeds demo data through the app's real IPC layer — so they stay honest.
 
@@ -67,6 +73,9 @@ which seeds demo data through the app's real IPC layer — so they stay honest.
   redemptions in settings
 - **Custom lists** (groceries, to-dos, anything): color-coded cards with
   tap-to-check items, clear-done, shared by the whole family
+- **Phone companion app**: scan a QR code to pair, then edit lists, meals, and
+  chores from any phone on your Wi-Fi — served by the display itself, no cloud
+  (see "Companion app" below)
 - **Meal planning**: breakfast/lunch/dinner/snack per day, edited from a tap on
   the meal strip in the Week and Day views
 - **Photo screensaver**: point it at a folder of family photos; after the
@@ -82,6 +91,30 @@ which seeds demo data through the app's real IPC layer — so they stay honest.
   dark palette at sunset and back at sunrise — sun times computed locally from
   your weather location (no network), falling back to 7pm–7am without one.
   Settings → General → Appearance also offers always-Light / always-Dark.
+
+### Companion app (phones)
+
+Phones on your home Wi-Fi can edit **lists, meals, and chores** (and see a
+read-only week agenda) without walking to the display:
+
+1. On the display: Settings → General → **Companion app** → enable
+2. Tap **Pair a phone** and scan the QR code with the phone's camera
+3. On the phone, use the browser's **Add to Home Screen** — it installs like an
+   app with its own icon
+
+How it works and what to know:
+
+- The display itself serves the app on your network (default port 8420) — no
+  cloud, no accounts; everything stays in your house. Each QR scan pairs one
+  device; **Unpair all devices** in settings revokes every phone at once.
+- Pairing lives behind the parental PIN, and a paired phone gets parent-level
+  editing of lists/meals/chores only — it can never reach settings, sync
+  credentials, or cameras.
+- If a phone can't connect, allow OpenSkyLight through **Windows Firewall**
+  (Private networks) on the kiosk machine.
+- Away-from-home access: run [Tailscale](https://tailscale.com) on the kiosk
+  and your phone and it works from anywhere, unchanged. (Traffic on your LAN is
+  plain HTTP — fine for a home network, which is the threat model here.)
 
 ### Connecting Google Calendar
 
@@ -128,6 +161,7 @@ test suite, and publishes the release; every kiosk picks it up automatically.
 npm install        # also rebuilds better-sqlite3 for Electron
 npm run dev        # windowed dev mode with hot reload
 npm run dev -- --kiosk   # fullscreen kiosk in dev
+npm run dev:companion    # companion web app with hot reload (proxies /api to a running kiosk)
 npm test           # unit tests (run inside Electron's Node for the native module)
 npm run typecheck
 node scripts/e2e-smoke.mjs   # launches the built app and creates an event end-to-end

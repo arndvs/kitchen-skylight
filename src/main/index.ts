@@ -6,7 +6,16 @@ import { createSettingsService } from './services/settingsService'
 import { createPeopleService } from './services/peopleService'
 import { createCalendarService } from './services/calendarService'
 import { createEventService } from './services/eventService'
-import { registerIpcHandlers, broadcast } from './ipc/router'
+import {
+  buildChannelTable,
+  dispatch,
+  registerIpcHandlers,
+  broadcast,
+  type ChannelTable,
+  type Services
+} from './ipc/router'
+import { createCompanionTokens } from './companion/companionTokens'
+import { createCompanionServer } from './companion/companionServer'
 import { createMainWindow } from './window'
 import { createWeatherService } from './services/weatherService'
 import { createAuthService } from './services/authService'
@@ -68,7 +77,19 @@ if (!gotLock) {
       broadcast
     })
 
-    registerIpcHandlers({
+    // companion dispatches through the same channel table built below; the
+    // closure resolves after boot, before any HTTP request can arrive
+    let channelTable: ChannelTable
+    const companion = createCompanionServer({
+      settings,
+      tokens: createCompanionTokens(settings),
+      dispatch: (channel, payload) => dispatch(services, channelTable, channel, payload, { gate: 'none' }),
+      version: app.getVersion(),
+      staticRoot: join(__dirname, '../companion')
+    })
+    app.on('will-quit', () => companion.shutdown())
+
+    const services: Services = {
       settings,
       people: createPeopleService(db),
       calendars: createCalendarService(db),
@@ -86,12 +107,16 @@ if (!gotLock) {
       kiosk,
       updater,
       rss: createRssService(),
-      camera: cameraService
-    })
+      camera: cameraService,
+      companion
+    }
+    channelTable = buildChannelTable(services)
+    registerIpcHandlers(services, channelTable)
     createMainWindow()
     syncManager.start()
     kiosk.start()
     updater.start()
+    companion.applySettings()
 
     app.on('activate', () => {
       if (BrowserWindow.getAllWindows().length === 0) createMainWindow()

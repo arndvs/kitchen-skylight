@@ -295,6 +295,8 @@ export interface AppSettings {
   screensaver: { folder: string | null; idleMinutes: number }
   launchOnStartup: boolean
   homeLayout: HomeTile[]
+  /** LAN companion web app (phones editing lists/meals/chores) */
+  companion: { enabled: boolean; port: number }
 }
 
 import { DEFAULT_HOME_LAYOUT } from '../home'
@@ -309,7 +311,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   sleep: { enabled: false, start: '21:30', end: '06:30' },
   screensaver: { folder: null, idleMinutes: 10 },
   launchOnStartup: false,
-  homeLayout: DEFAULT_HOME_LAYOUT
+  homeLayout: DEFAULT_HOME_LAYOUT,
+  companion: { enabled: false, port: 8420 }
 }
 
 /** Touch-friendly person color palette (Skylight-style) */

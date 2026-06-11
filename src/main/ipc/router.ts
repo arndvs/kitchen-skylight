@@ -23,6 +23,7 @@ import type { Kiosk } from '../kiosk/kiosk'
 import type { Updater } from '../updater'
 import type { RssService } from '../services/rssService'
 import type { CameraService } from '../services/cameraService'
+import type { CompanionServer } from '../companion/companionServer'
 
 export interface Services {
   settings: SettingsService
@@ -43,6 +44,7 @@ export interface Services {
   updater: Updater
   rss: RssService
   camera: CameraService
+  companion: CompanionServer
 }
 
 /**
@@ -72,11 +74,14 @@ const PARENT_GATED: Set<IpcChannel> = new Set([
   'rewards:grant',
   'screensaver:pickFolder',
   'camera:add',
-  'camera:remove'
+  'camera:remove',
+  'companion:issueToken',
+  'companion:unpairAll'
 ])
 
 /** Channels that mutate data, mapped to the domain the renderer should refetch. */
-const MUTATION_DOMAINS: Partial<Record<IpcChannel, 'events' | 'people' | 'calendars' | 'settings'>> = {
+type MutationDomain = 'events' | 'people' | 'calendars' | 'settings' | 'lists' | 'meals' | 'chores'
+const MUTATION_DOMAINS: Partial<Record<IpcChannel, MutationDomain>> = {
   'settings:set': 'settings',
   'people:create': 'people',
   'people:update': 'people',
@@ -90,7 +95,20 @@ const MUTATION_DOMAINS: Partial<Record<IpcChannel, 'events' | 'people' | 'calend
   'google:connect': 'calendars',
   'google:disconnect': 'calendars',
   'google:setCalendarSelected': 'calendars',
-  'ics:add': 'calendars'
+  'ics:add': 'calendars',
+  'lists:create': 'lists',
+  'lists:update': 'lists',
+  'lists:delete': 'lists',
+  'listItems:add': 'lists',
+  'listItems:toggle': 'lists',
+  'listItems:delete': 'lists',
+  'listItems:clearChecked': 'lists',
+  'meals:set': 'meals',
+  'chores:create': 'chores',
+  'chores:update': 'chores',
+  'chores:delete': 'chores',
+  'chores:complete': 'chores',
+  'chores:uncomplete': 'chores'
 }
 
 export function broadcast(channel: string, payload: unknown): void {
@@ -99,31 +117,61 @@ export function broadcast(channel: string, payload: unknown): void {
   }
 }
 
-export function registerIpcHandlers(services: Services): void {
+interface ChannelEntry {
+  schema: ZodType | null
+  fn: (req: unknown) => unknown
+}
+export type ChannelTable = Map<IpcChannel, ChannelEntry>
+
+/**
+ * Run one request through the full pipeline: gate → validate → handler →
+ * change broadcast → envelope. Shared by ipcMain (gate: 'pin') and the
+ * companion HTTP server (gate: 'none' — its bearer token IS the parent
+ * credential, since issuing it required the PIN).
+ */
+export async function dispatch<K extends IpcChannel>(
+  services: Services,
+  table: ChannelTable,
+  channel: K,
+  payload: unknown,
+  opts: { gate: 'pin' | 'none' }
+): Promise<IpcResult<IpcContract[K]['res']>> {
+  const entry = table.get(channel)
+  if (!entry) return { ok: false, error: { code: 'NOT_FOUND', message: 'Unknown channel' } }
+  try {
+    if (opts.gate === 'pin' && PARENT_GATED.has(channel)) services.auth.assertUnlocked()
+    const req = entry.schema ? entry.schema.parse(payload) : payload
+    const data = (await entry.fn(req)) as IpcContract[K]['res']
+    const domain = MUTATION_DOMAINS[channel]
+    if (domain) broadcast('push:dataChanged', { domain })
+    return { ok: true, data }
+  } catch (err) {
+    if (err instanceof AppError) {
+      return { ok: false, error: { code: err.code, message: err.message } }
+    }
+    if (err instanceof ZodError) {
+      return { ok: false, error: { code: 'INVALID', message: err.issues[0]?.message ?? 'Invalid input' } }
+    }
+    console.error(`[ipc] ${channel} failed:`, err)
+    return { ok: false, error: { code: 'INTERNAL', message: 'Something went wrong' } }
+  }
+}
+
+export function registerIpcHandlers(services: Services, table: ChannelTable): void {
+  for (const channel of table.keys()) {
+    ipcMain.handle(channel, (_event, payload) => dispatch(services, table, channel, payload, { gate: 'pin' }))
+  }
+}
+
+/** The single channel → {schema, handler} map consumed by ipcMain AND the companion HTTP API. */
+export function buildChannelTable(services: Services): ChannelTable {
+  const table: ChannelTable = new Map()
   function handle<K extends IpcChannel>(
     channel: K,
     schema: ZodType | null,
     fn: (req: IpcContract[K]['req']) => IpcContract[K]['res'] | Promise<IpcContract[K]['res']>
   ): void {
-    ipcMain.handle(channel, async (_event, payload): Promise<IpcResult<IpcContract[K]['res']>> => {
-      try {
-        if (PARENT_GATED.has(channel)) services.auth.assertUnlocked()
-        const req = (schema ? schema.parse(payload) : payload) as IpcContract[K]['req']
-        const data = await fn(req)
-        const domain = MUTATION_DOMAINS[channel]
-        if (domain) broadcast('push:dataChanged', { domain })
-        return { ok: true, data }
-      } catch (err) {
-        if (err instanceof AppError) {
-          return { ok: false, error: { code: err.code, message: err.message } }
-        }
-        if (err instanceof ZodError) {
-          return { ok: false, error: { code: 'INVALID', message: err.issues[0]?.message ?? 'Invalid input' } }
-        }
-        console.error(`[ipc] ${channel} failed:`, err)
-        return { ok: false, error: { code: 'INTERNAL', message: 'Something went wrong' } }
-      }
-    })
+    table.set(channel, { schema, fn: fn as (req: unknown) => unknown })
   }
 
   handle('app:getInfo', null, () => ({
@@ -137,6 +185,7 @@ export function registerIpcHandlers(services: Services): void {
   handle('settings:set', s.settingsPatchSchema, (req) => {
     const result = services.settings.set(req.patch)
     if (req.patch.launchOnStartup !== undefined) services.kiosk.setLaunchOnStartup(req.patch.launchOnStartup)
+    if (req.patch.companion !== undefined) services.companion.applySettings()
     return result
   })
 
@@ -238,6 +287,10 @@ export function registerIpcHandlers(services: Services): void {
   handle('screensaver:listPhotos', null, () => services.kiosk.listPhotos())
   handle('kiosk:previewScreensaver', null, () => services.kiosk.previewScreensaver())
 
+  handle('companion:getStatus', null, () => services.companion.getStatus())
+  handle('companion:issueToken', null, () => services.companion.issueToken())
+  handle('companion:unpairAll', null, () => services.companion.unpairAll())
+
   handle('auth:getStatus', null, () => ({
     pinSet: services.auth.pinSet(),
     unlocked: services.auth.isUnlocked()
@@ -245,4 +298,6 @@ export function registerIpcHandlers(services: Services): void {
   handle('auth:verifyPin', s.pinVerifySchema, (req) => ({ valid: services.auth.verifyPin(req.pin) }))
   handle('auth:setPin', s.pinSetSchema, (req) => services.auth.setPin(req.pin))
   handle('auth:lock', null, () => services.auth.lock())
+
+  return table
 }

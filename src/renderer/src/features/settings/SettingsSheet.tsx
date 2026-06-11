@@ -7,6 +7,8 @@ import {
   useAuthStatus,
   useCalendarMutations,
   useCalendars,
+  useCompanionMutations,
+  useCompanionStatus,
   useChoreMutations,
   useChores,
   useCitySearch,
@@ -32,6 +34,7 @@ import { BigButton, Dialog, FieldLabel, SegmentedControl, Sheet, Toggle } from '
 import { OskInput } from '../../components/Osk'
 import { PlusIcon } from '../../components/icons'
 import { initials, textOn } from '../../lib/format'
+import QRCode from 'qrcode'
 
 type Tab = 'family' | 'calendars' | 'chores' | 'general'
 
@@ -935,6 +938,110 @@ function ParentalLockSection() {
   )
 }
 
+function CompanionSection() {
+  const { data: settings } = useSettings()
+  const mutation = useSettingsMutation()
+  const { data: status } = useCompanionStatus()
+  const companionMutations = useCompanionMutations()
+  const [qr, setQr] = useState<{ url: string; dataUrl: string } | null>(null)
+  const [portDraft, setPortDraft] = useState<string | null>(null)
+  if (!settings) return null
+  const companion = settings.companion
+
+  const pair = async (): Promise<void> => {
+    const { url } = await companionMutations.issueToken.mutateAsync(undefined)
+    const dataUrl = await QRCode.toDataURL(url, { width: 480, margin: 1 })
+    setQr({ url, dataUrl })
+  }
+
+  const draftPort = portDraft === null ? companion.port : Number(portDraft)
+  const portValid = Number.isInteger(draftPort) && draftPort >= 1024 && draftPort <= 65535
+
+  return (
+    <div>
+      <FieldLabel>Companion app</FieldLabel>
+      <div className="flex flex-col gap-3 rounded-2xl bg-paper-deep/50 p-4">
+        <div className="flex items-center gap-3">
+          <span className="flex-1 text-base font-semibold text-ink-soft">
+            Let phones on your home Wi-Fi edit lists, meals, and chores
+          </span>
+          <Toggle
+            checked={companion.enabled}
+            onChange={(enabled) => mutation.mutate({ companion: { ...companion, enabled } })}
+            label="Companion app"
+          />
+        </div>
+
+        {companion.enabled && (
+          <>
+            <div className="flex items-center gap-3">
+              <span className="text-base font-bold text-ink-soft">Port</span>
+              <div className="w-28">
+                <OskInput
+                  value={portDraft ?? String(companion.port)}
+                  onChange={(v) => setPortDraft(v.replace(/\D/g, '').slice(0, 5))}
+                  placeholder="8420"
+                />
+              </div>
+              {portDraft !== null && draftPort !== companion.port && (
+                <BigButton
+                  variant="ghost"
+                  disabled={!portValid}
+                  onClick={() => {
+                    mutation.mutate({ companion: { ...companion, port: draftPort } })
+                    setPortDraft(null)
+                  }}
+                >
+                  Apply
+                </BigButton>
+              )}
+              <span className="flex-1 text-right text-sm font-semibold text-ink-faint">
+                {status?.running
+                  ? `Serving${status.urls[0] ? ` at ${status.urls[0]}` : ''}`
+                  : (status?.lastError ?? 'Starting…')}
+              </span>
+            </div>
+
+            <div className="flex gap-3">
+              <BigButton onClick={() => void pair()} disabled={!status?.running}>
+                Pair a phone
+              </BigButton>
+              {(status?.pairedCount ?? 0) > 0 && (
+                <BigButton variant="danger" onClick={() => companionMutations.unpairAll.mutate(undefined)}>
+                  Unpair all devices ({status?.pairedCount})
+                </BigButton>
+              )}
+            </div>
+            <p className="text-sm font-semibold text-ink-faint">
+              If phones can't connect, allow OpenSkyLight through Windows Firewall (Private networks).
+            </p>
+          </>
+        )}
+      </div>
+
+      <Dialog open={qr !== null} onClose={() => setQr(null)} title="Scan with the phone's camera">
+        {qr && (
+          <div className="flex flex-col items-center gap-3">
+            <img src={qr.dataUrl} alt="Pairing QR code" className="h-64 w-64 rounded-xl bg-white p-2" />
+            <p className="max-w-sm text-center text-sm font-semibold break-all text-ink-faint">{qr.url}</p>
+            {(status?.urls.length ?? 0) > 1 && (
+              <p className="max-w-sm text-center text-xs font-semibold text-ink-faint">
+                Wrong network? This computer is also reachable at{' '}
+                {status?.urls.slice(1).map((u) => new URL(u).hostname).join(', ')}
+              </p>
+            )}
+            <p className="max-w-sm text-center text-sm font-semibold text-ink-soft">
+              Then use the phone browser's “Add to Home Screen” to keep it like an app. Each scan pairs one
+              device — close this and pair again for the next phone.
+            </p>
+            <BigButton onClick={() => setQr(null)}>Done</BigButton>
+          </div>
+        )}
+      </Dialog>
+    </div>
+  )
+}
+
 function minutesToHhMm(minutes: number): string {
   return `${String(Math.floor(minutes / 60)).padStart(2, '0')}:${String(minutes % 60).padStart(2, '0')}`
 }
@@ -1061,6 +1168,7 @@ function GeneralTab() {
       <ScreensaverSection />
       <SleepSection />
       <ParentalLockSection />
+      <CompanionSection />
       <div>
         <FieldLabel>Default screen</FieldLabel>
         <SegmentedControl

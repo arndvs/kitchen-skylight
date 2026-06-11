@@ -304,6 +304,22 @@ export function useAuthMutations() {
   }
 }
 
+export function useCompanionStatus() {
+  return useQuery({
+    queryKey: ['companionStatus'],
+    queryFn: () => ipcInvoke('companion:getStatus', undefined),
+    refetchInterval: 5_000 // cheap local IPC; tracks server start/stop + pair count
+  })
+}
+
+export function useCompanionMutations() {
+  const keys = [['companionStatus']]
+  return {
+    issueToken: useInvalidatingMutation(() => ipcInvoke('companion:issueToken', undefined), keys),
+    unpairAll: useInvalidatingMutation(() => ipcInvoke('companion:unpairAll', undefined), keys)
+  }
+}
+
 /** Refetch when the main process announces data changes (sync engine, other windows). */
 export function usePushInvalidation(): void {
   const queryClient = useQueryClient()
@@ -314,6 +330,11 @@ export function usePushInvalidation(): void {
       if (domain === 'events') void queryClient.invalidateQueries({ queryKey: ['occurrences'] })
       else if (domain) void queryClient.invalidateQueries({ queryKey: [domain] })
       if (domain === 'calendars') void queryClient.invalidateQueries({ queryKey: ['occurrences'] })
+      if (domain === 'chores') {
+        // chore day views and star balances key off their own roots
+        void queryClient.invalidateQueries({ queryKey: ['choresDay'] })
+        void queryClient.invalidateQueries({ queryKey: ['balances'] })
+      }
     })
     const offStatus = window.osl.on('push:syncStatus', () => {
       void queryClient.invalidateQueries({ queryKey: ['syncStatus'] })

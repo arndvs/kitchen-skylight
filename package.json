@@ -9,14 +9,16 @@
   "scripts": {
     "dev": "electron-vite dev",
     "dev:windowed": "electron-vite dev -- --windowed",
-    "build": "electron-vite build",
+    "dev:companion": "vite --config companion.vite.config.ts",
+    "build": "electron-vite build && npm run build:companion",
+    "build:companion": "vite build --config companion.vite.config.ts",
     "preview": "electron-vite preview",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "node scripts/run-vitest.mjs run",
     "test:watch": "node scripts/run-vitest.mjs",
     "postinstall": "electron-builder install-app-deps",
-    "dist": "electron-vite build && electron-builder",
-    "release": "electron-vite build && electron-builder --publish always"
+    "dist": "npm run build && electron-builder",
+    "release": "npm run build && electron-builder --publish always"
   },
   "dependencies": {
     "@googleapis/calendar": "^15.0.0",
@@ -41,6 +43,7 @@
     "@types/better-sqlite3": "^7.6.12",
     "@types/luxon": "^3.4.2",
     "@types/node": "^22.13.1",
+    "@types/qrcode": "^1.5.6",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@types/ws": "^8.18.1",
@@ -49,6 +52,7 @@
     "electron-builder": "^25.1.8",
     "electron-vite": "^3.0.0",
     "playwright-core": "^1.60.0",
+    "qrcode": "^1.5.4",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-simple-keyboard": "^3.8.27",

@@ -158,6 +158,7 @@ export type HomeTileType =
   | 'photo'
   | 'news'
   | 'camera'
+  | 'birdnet'
 
 export interface HomeTileConfig {
   /** 'list' tiles: which list to show */
@@ -166,6 +167,8 @@ export interface HomeTileConfig {
   feedId?: string
   /** 'camera' tiles: which configured camera to stream */
   cameraId?: string
+  /** 'birdnet' tiles: the BirdNET-Go base URL on the LAN */
+  birdnetUrl?: string
 }
 
 export interface CameraDto {

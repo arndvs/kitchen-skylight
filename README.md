@@ -40,9 +40,15 @@ which seeds demo data through the app's real IPC layer — so they stay honest.
   arrange yourself — drag, resize, add, and remove tiles in a PIN-gated edit
   mode with snap-to-grid ghosts. Eleven tile types: today's events, this-week
   agenda, weather, chores progress, star balances, any list, today's meals,
-  clock, cycling photos, news headlines, and live cameras (clock and weather
+  clock, cycling photos, news headlines, live cameras, BirdNET-Go bird
+  detections (clock and weather
   tiles are off by default — the header already shows both). Tapping a tile
   jumps to its tab.
+- **Bird detections (BirdNET-Go)**: point a tile at your
+  [BirdNET-Go](https://github.com/tphakala/birdnet-go) instance on the LAN and
+  see the latest birds it heard — species, confidence, and a photo — refreshing
+  every ~20 seconds. Photos are proxied through the kiosk so the sandbox stays
+  intact; paste the dashboard URL and the app trims it to the right address.
 - **IP camera tiles (RTSP)**: add any camera's rtsp:// URL and watch it live on
   the home screen (~1s latency). The bundled ffmpeg remuxes the camera's H.264
   stream without transcoding (near-zero CPU) to a token-guarded localhost

@@ -13,7 +13,7 @@ import { XIcon } from '../../components/icons'
 import { TILE_REGISTRY } from './tileRegistry'
 
 const TILE_TYPES = Object.keys(TILE_REGISTRY) as HomeTileType[]
-type PickerStep = null | 'list' | 'news' | 'camera'
+type PickerStep = null | 'list' | 'news' | 'camera' | 'birdnet'
 
 export function AddTileSheet({
   open,
@@ -59,7 +59,9 @@ export function AddTileSheet({
         ? 'Which news feed?'
         : picker === 'camera'
           ? 'Which camera?'
-          : 'Add a tile'
+          : picker === 'birdnet'
+            ? 'BirdNET-Go address'
+            : 'Add a tile'
 
   return (
     <Sheet
@@ -89,6 +91,8 @@ export function AddTileSheet({
         </div>
       ) : picker === 'camera' ? (
         <CameraPicker onPick={(cameraId) => place('camera', { cameraId })} />
+      ) : picker === 'birdnet' ? (
+        <BirdNetPicker onPick={(birdnetUrl) => place('birdnet', { birdnetUrl })} />
       ) : picker === 'news' ? (
         <div className="flex flex-col gap-4 pb-2">
           {(['us', 'world'] as const).map((region) => (
@@ -121,7 +125,9 @@ export function AddTileSheet({
                 type="button"
                 disabled={alreadyPlaced}
                 onClick={() =>
-                  type === 'list' || type === 'news' || type === 'camera' ? setPicker(type) : place(type)
+                  type === 'list' || type === 'news' || type === 'camera' || type === 'birdnet'
+                    ? setPicker(type)
+                    : place(type)
                 }
                 className="pressable rounded-2xl bg-paper-deep/50 p-4 text-left disabled:opacity-40"
               >
@@ -198,6 +204,38 @@ function CameraPicker({ onPick }: { onPick: (cameraId: string) => void }) {
           Add camera & place tile
         </BigButton>
       </div>
+    </div>
+  )
+}
+
+function BirdNetPicker({ onPick }: { onPick: (url: string) => void }) {
+  const pushToast = useToasts((s) => s.push)
+  const [url, setUrl] = useState('')
+  const [testing, setTesting] = useState(false)
+
+  const testAndAdd = async (): Promise<void> => {
+    setTesting(true)
+    try {
+      // the service normalizes (e.g. strips /ui/dashboard) and returns the origin to persist
+      const result = await ipcInvoke('birdnet:getDetections', { url: url.trim() })
+      onPick(result.url)
+    } catch (err) {
+      pushToast(err instanceof Error ? err.message : 'Could not reach BirdNET-Go')
+    } finally {
+      setTesting(false)
+    }
+  }
+
+  return (
+    <div className="flex flex-col gap-2 rounded-2xl bg-paper-deep/50 p-4">
+      <FieldLabel>BirdNET-Go address</FieldLabel>
+      <OskInput value={url} onChange={setUrl} placeholder="http://192.168.0.208:8080" />
+      <p className="text-sm font-semibold text-ink-faint">
+        Enter your BirdNET-Go web address on the LAN. The dashboard URL is fine — we'll trim it.
+      </p>
+      <BigButton onClick={() => void testAndAdd()} disabled={!/^https?:\/\/.+/i.test(url.trim()) || testing}>
+        {testing ? 'Testing…' : 'Test & place tile'}
+      </BigButton>
     </div>
   )
 }

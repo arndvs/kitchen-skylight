@@ -21,7 +21,8 @@ const ALLOWED_INVOKE_PREFIXES = [
   'kiosk:',
   'rss:',
   'camera:',
-  'companion:'
+  'companion:',
+  'birdnet:'
 ]
 const PUSH_PREFIX = 'push:'
 

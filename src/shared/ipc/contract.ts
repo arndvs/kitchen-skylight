@@ -126,6 +126,25 @@ export type IpcContract = {
     }
   }
 
+  'birdnet:getDetections': {
+    req: { url: string }
+    res: {
+      /** normalized origin the tile should persist */
+      url: string
+      label: string
+      detections: {
+        id: number
+        commonName: string
+        scientificName: string
+        confidence: number
+        timestamp: string
+        /** osl-bird:// proxy URL for the species photo */
+        image: string
+      }[]
+      fetchedAt: string
+    }
+  }
+
   'weather:get': {
     req: void
     res: {
@@ -200,7 +219,8 @@ export const ALLOWED_CHANNEL_PREFIXES = [
   'kiosk:',
   'rss:',
   'camera:',
-  'companion:'
+  'companion:',
+  'birdnet:'
 ] as const
 
 /** Envelope used for every invoke result so errors cross the bridge cleanly. */

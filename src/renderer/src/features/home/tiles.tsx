@@ -352,6 +352,57 @@ export function NewsTile({ tile, compact }: TileProps) {
   )
 }
 
+export function BirdNetTile({ tile, compact }: TileProps) {
+  const url = tile.config?.birdnetUrl
+  const covered = useKioskState((s) => s.covered)
+  const { data, isError } = useQuery({
+    queryKey: ['birdnet', url],
+    queryFn: () => ipcInvoke('birdnet:getDetections', { url: url! }),
+    enabled: !!url && !covered,
+    refetchInterval: 20_000
+  })
+
+  if (!url) return <Placeholder>Add your BirdNET-Go URL — re-add this tile</Placeholder>
+
+  const maxItems = compact ? 3 : Math.max(2, tile.h * 2 - 1)
+  return (
+    <div className="flex h-full flex-col overflow-hidden">
+      <TileTitle>Birds</TileTitle>
+      {isError && !data ? (
+        <Placeholder>Couldn&apos;t reach BirdNET — will retry</Placeholder>
+      ) : !data ? (
+        <Placeholder>Loading detections…</Placeholder>
+      ) : data.detections.length === 0 ? (
+        <Placeholder>No detections yet</Placeholder>
+      ) : (
+        <div className="flex min-h-0 flex-col gap-1.5 overflow-hidden">
+          {data.detections.slice(0, maxItems).map((det) => (
+            <div key={`${det.id}-${det.timestamp}`} className="flex min-w-0 items-center gap-2">
+              {det.image && (
+                <img
+                  src={det.image}
+                  alt=""
+                  loading="lazy"
+                  onError={(e) => (e.currentTarget.style.display = 'none')}
+                  className={`shrink-0 rounded-lg object-cover ${compact ? 'h-7 w-7' : 'h-9 w-9'}`}
+                />
+              )}
+              <span className="min-w-0 flex-1">
+                <span className={`block truncate font-bold ${compact ? 'text-sm' : 'text-base'}`}>
+                  {det.commonName}
+                </span>
+                <span className="block text-[11px] font-bold text-ink-faint">
+                  {Math.round(det.confidence * 100)}% · {DateTime.fromISO(det.timestamp).toRelative()}
+                </span>
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
 const CAMERA_RETRY_MS = 10_000
 
 export function CameraTile({ tile }: TileProps) {

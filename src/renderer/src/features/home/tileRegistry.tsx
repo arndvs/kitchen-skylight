@@ -1,6 +1,7 @@
 import type { ComponentType } from 'react'
 import type { CalendarViewKind, HomeTileType } from '@shared/types'
 import {
+  BirdNetTile,
   CameraTile,
   ChoresProgressTile,
   ClockTile,
@@ -84,5 +85,10 @@ export const TILE_REGISTRY: Record<HomeTileType, TileMeta> = {
     label: 'Camera',
     description: 'Live view from an IP camera (RTSP)',
     component: CameraTile
+  },
+  birdnet: {
+    label: 'Birds',
+    description: 'Recent detections from your BirdNET-Go',
+    component: BirdNetTile
   }
 }

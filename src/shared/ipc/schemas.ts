@@ -95,24 +95,34 @@ const homeTileSchema = z.object({
     'clock',
     'photo',
     'news',
-    'camera'
+    'camera',
+    'birdnet'
   ]),
   x: z.number().int().min(0).max(11),
   y: z.number().int().min(0).max(5),
   w: z.number().int().min(1).max(12),
   h: z.number().int().min(1).max(6),
-  // value bounds must be >= what sanitizeLayout keeps (1..80), or a renderable
+  // value bounds must be >= what sanitizeLayout keeps (1..200), or a renderable
   // layout could be unsaveable
   config: z
     .object({
-      listId: z.string().min(1).max(80).optional(),
-      feedId: z.string().min(1).max(80).optional(),
-      cameraId: z.string().min(1).max(80).optional()
+      listId: z.string().min(1).max(200).optional(),
+      feedId: z.string().min(1).max(200).optional(),
+      cameraId: z.string().min(1).max(200).optional(),
+      birdnetUrl: z.string().min(1).max(200).optional()
     })
     .optional()
 })
 
 export const rssFeedSchema = z.object({ feedId: z.string().min(1).max(40) })
+
+export const birdnetUrlSchema = z.object({
+  url: z
+    .string()
+    .trim()
+    .max(500)
+    .regex(/^https?:\/\/.+/i, 'Must be an http:// or https:// URL')
+})
 
 export const cameraAddSchema = z.object({
   name: z.string().trim().min(1).max(60),

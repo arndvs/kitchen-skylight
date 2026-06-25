@@ -32,6 +32,21 @@ export function createKiosk(deps: { settings: SettingsService; broadcast: (ch: s
     })
   }
 
+  /**
+   * Bird photos are proxied through osl-bird:// so the sandboxed renderer never
+   * makes a cross-origin request to the (parent-configured) BirdNET-Go host.
+   * Only the fixed /media/image/ path is ever fetched.
+   */
+  function registerBirdImageProtocol(): void {
+    protocol.handle('osl-bird', (request) => {
+      const url = new URL(request.url)
+      const base = url.searchParams.get('base') ?? ''
+      const sci = url.searchParams.get('sci') ?? ''
+      if (!/^https?:\/\//i.test(base) || sci === '') return new Response('bad request', { status: 400 })
+      return net.fetch(`${base}/media/image/${encodeURIComponent(sci)}`)
+    })
+  }
+
   function listPhotos(): string[] {
     const folder = settings.getAll().screensaver.folder
     if (!folder) return []
@@ -82,6 +97,7 @@ export function createKiosk(deps: { settings: SettingsService; broadcast: (ch: s
 
   function start(): void {
     registerPhotoProtocol()
+    registerBirdImageProtocol()
     blockerId = powerSaveBlocker.start('prevent-display-sleep')
 
     idleTimer = setInterval(() => {

@@ -23,6 +23,7 @@ import type { Kiosk } from '../kiosk/kiosk'
 import type { Updater } from '../updater'
 import type { RssService } from '../services/rssService'
 import type { CameraService } from '../services/cameraService'
+import type { BirdNetService } from '../services/birdnetService'
 import type { CompanionServer } from '../companion/companionServer'
 
 export interface Services {
@@ -44,6 +45,7 @@ export interface Services {
   updater: Updater
   rss: RssService
   camera: CameraService
+  birdnet: BirdNetService
   companion: CompanionServer
 }
 
@@ -273,6 +275,8 @@ export function buildChannelTable(services: Services): ChannelTable {
   handle('meals:set', s.mealSetSchema, (req) => services.meals.set(req.date, req.slot, req.text))
 
   handle('rss:getFeed', s.rssFeedSchema, (req) => services.rss.getFeed(req.feedId))
+
+  handle('birdnet:getDetections', s.birdnetUrlSchema, (req) => services.birdnet.getDetections(req.url))
 
   handle('camera:list', null, () => services.camera.list())
   handle('camera:add', s.cameraAddSchema, (req) => services.camera.add(req.name, req.url))

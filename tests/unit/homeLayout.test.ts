@@ -108,7 +108,7 @@ describe('sanitizeLayout', () => {
     const result = sanitizeLayout([
       { id: 'a'.repeat(81), type: 'clock', x: 0, y: 0, w: 2, h: 2 }, // id too long → tile dropped
       { id: 'n', type: 'news', x: 0, y: 0, w: 4, h: 3, config: { feedId: '' } }, // empty value → key dropped
-      { id: 'l', type: 'list', x: 4, y: 0, w: 3, h: 4, config: { listId: 'x'.repeat(81) } } // too long → key dropped
+      { id: 'l', type: 'list', x: 4, y: 0, w: 3, h: 4, config: { listId: 'x'.repeat(201) } } // too long → key dropped
     ])
     expect(result).toHaveLength(2)
     expect(result[0].config).toBeUndefined()

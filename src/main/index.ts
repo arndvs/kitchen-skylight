@@ -27,6 +27,7 @@ import { createKiosk } from './kiosk/kiosk'
 import { createUpdater } from './updater'
 import { createRssService } from './services/rssService'
 import { createCameraService } from './services/cameraService'
+import { createBirdNetService } from './services/birdnetService'
 import { createGoogleAuth } from './sync/googleAuth'
 import { createGoogleSync } from './sync/googleSync'
 import { createOutboxWorker } from './sync/outboxWorker'
@@ -108,6 +109,7 @@ if (!gotLock) {
       updater,
       rss: createRssService(),
       camera: cameraService,
+      birdnet: createBirdNetService(),
       companion
     }
     channelTable = buildChannelTable(services)

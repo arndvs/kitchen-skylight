@@ -96,7 +96,8 @@ const homeTileSchema = z.object({
     'photo',
     'news',
     'camera',
-    'birdnet'
+    'birdnet',
+    'timer'
   ]),
   x: z.number().int().min(0).max(11),
   y: z.number().int().min(0).max(5),

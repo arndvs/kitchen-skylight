@@ -159,6 +159,7 @@ export type HomeTileType =
   | 'news'
   | 'camera'
   | 'birdnet'
+  | 'timer'
 
 export interface HomeTileConfig {
   /** 'list' tiles: which list to show */

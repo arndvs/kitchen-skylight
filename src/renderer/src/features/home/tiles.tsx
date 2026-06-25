@@ -17,6 +17,9 @@ import {
 } from '../../api/hooks'
 import { useCalendarData } from '../calendar/useCalendarData'
 import { useKioskState } from '../../stores/kioskStore'
+import { useTimers } from '../../stores/timerStore'
+import { formatDuration } from '@shared/timer'
+import { startAlarm, stopAlarm } from '../../lib/alarm'
 import { weatherIcon } from '../weather/WeatherHeader'
 import { SLOT_META } from '../meals/Meals'
 import { ZONE } from '../../stores/uiStore'
@@ -346,6 +349,97 @@ export function NewsTile({ tile, compact }: TileProps) {
               </span>
             </div>
           ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+const TIMER_PRESETS_SEC = [60, 180, 300, 600, 900]
+
+export function TimerTile({ compact }: TileProps) {
+  const timers = useTimers((s) => s.timers)
+  const add = useTimers((s) => s.add)
+  const cancel = useTimers((s) => s.cancel)
+  const [now, setNow] = useState(() => Date.now())
+
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 250)
+    return () => clearInterval(t)
+  }, [])
+
+  const anyRinging = timers.some((t) => now >= t.endsAt)
+  useEffect(() => {
+    if (!anyRinging) return
+    startAlarm()
+    return () => stopAlarm()
+  }, [anyRinging])
+
+  const preset = (sec: number): string => (sec >= 60 ? `${sec / 60}m` : `${sec}s`)
+
+  return (
+    <div className="flex h-full flex-col overflow-hidden">
+      <TileTitle>Timers</TileTitle>
+
+      <div className="mb-2 flex shrink-0 flex-wrap gap-1.5">
+        {TIMER_PRESETS_SEC.map((sec) => (
+          <button
+            key={sec}
+            type="button"
+            aria-label={`Start a ${preset(sec)} timer`}
+            onClick={() => add(sec)}
+            className="pressable rounded-lg bg-paper-deep px-2.5 py-1 text-sm font-extrabold text-ink-soft"
+          >
+            {preset(sec)}
+          </button>
+        ))}
+      </div>
+
+      {timers.length === 0 ? (
+        <div className="flex flex-1 items-center justify-center px-2 text-center text-sm font-bold text-ink-faint">
+          Tap a preset, or say “set a timer for 5 minutes”
+        </div>
+      ) : (
+        <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto">
+          {timers.map((t) => {
+            const remaining = Math.max(0, Math.ceil((t.endsAt - now) / 1000))
+            const ringing = remaining <= 0
+            const pct = Math.min(100, Math.max(0, (1 - remaining / t.durationSec) * 100))
+            return (
+              <div
+                key={t.id}
+                className={`flex shrink-0 items-center gap-2 rounded-xl px-2.5 py-1.5 ${
+                  ringing ? 'animate-pulse bg-ember text-white' : 'bg-paper-deep/60'
+                }`}
+              >
+                <span className="min-w-0 flex-1">
+                  {t.label && (
+                    <span className={`block truncate text-xs font-extrabold ${ringing ? 'text-white/90' : 'text-ink-faint'}`}>
+                      {t.label}
+                    </span>
+                  )}
+                  <span className={`block font-display tabular-nums ${compact ? 'text-xl' : 'text-2xl'} leading-none`}>
+                    {ringing ? 'Done!' : formatDuration(remaining)}
+                  </span>
+                  {!ringing && !compact && (
+                    <span className="mt-1 block h-1 overflow-hidden rounded-full bg-paper-deep">
+                      <span className="block h-full rounded-full bg-ember transition-all" style={{ width: `${pct}%` }} />
+                    </span>
+                  )}
+                </span>
+                <button
+                  type="button"
+                  aria-label={ringing ? `Dismiss ${t.label ?? 'timer'}` : `Cancel ${t.label ?? 'timer'}`}
+                  onClick={() => cancel(t.id)}
+                  className={`pressable flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-sm font-extrabold ${
+                    ringing ? 'bg-white/25 text-white' : 'text-ink-faint hover:bg-paper-deep'
+                  }`}
+                >
+                  ✕
+                </button>
+              </div>
+            )
+          })}
         </div>
       )}
     </div>

@@ -3,6 +3,7 @@ import type { CalendarViewKind, HomeTileType } from '@shared/types'
 import {
   BirdNetTile,
   CameraTile,
+  TimerTile,
   ChoresProgressTile,
   ClockTile,
   ListTile,
@@ -90,5 +91,10 @@ export const TILE_REGISTRY: Record<HomeTileType, TileMeta> = {
     label: 'Birds',
     description: 'Recent detections from your BirdNET-Go',
     component: BirdNetTile
+  },
+  timer: {
+    label: 'Timers',
+    description: 'Countdown timers — set by tap or voice',
+    component: TimerTile
   }
 }

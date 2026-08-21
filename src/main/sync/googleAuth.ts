@@ -94,7 +94,7 @@ export function createGoogleAuth(db: AppDb, settings: SettingsService) {
         res.end(
           `<html><body style="font-family:sans-serif;text-align:center;padding-top:4rem">
              <h2>${code ? 'Connected!' : 'Sign-in failed'}</h2>
-             <p>You can close this tab and return to your OpenSkyLight display.</p>
+             <p>You can close this tab and return to your Kitchen Skylight display.</p>
            </body></html>`
         )
         if (code) {

@@ -9,7 +9,7 @@ const userData = mkdtempSync(join(tmpdir(), 'osl-packaged-'))
 mkdirSync('shots', { recursive: true })
 
 const app = await electron.launch({
-  executablePath: resolve('dist/win-unpacked/OpenSkyLight.exe'),
+  executablePath: resolve('dist/win-unpacked/Kitchen Skylight.exe'),
   args: ['--windowed'],
   env: { ...process.env, OSL_USER_DATA: userData }
 })
@@ -33,7 +33,7 @@ try {
     return issued.data.url.split('#t=')[1]
   })
   const shell = await fetch('http://127.0.0.1:8425/')
-  if (shell.status !== 200 || !(await shell.text()).includes('OpenSkyLight'))
+  if (shell.status !== 200 || !(await shell.text()).includes('Kitchen Skylight'))
     throw new Error(`companion shell not served from asar: ${shell.status}`)
   const rpcRes = await fetch('http://127.0.0.1:8425/api/rpc/lists:getAll', {
     method: 'POST',

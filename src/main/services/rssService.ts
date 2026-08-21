@@ -112,7 +112,7 @@ export function createRssService() {
     try {
       const res = await fetch(preset.url, {
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-        headers: { 'User-Agent': 'OpenSkyLight/1.0 (family calendar display)' }
+        headers: { 'User-Agent': 'KitchenSkylight/1.0 (family calendar display)' }
       })
       if (!res.ok) throw new Error(`Feed returned HTTP ${res.status}`)
       const parsed = parseFeedXml(await res.text())

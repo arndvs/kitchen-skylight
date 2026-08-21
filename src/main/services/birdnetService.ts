@@ -64,7 +64,7 @@ export function createBirdNetService() {
     try {
       const res = await fetch(`${origin}/api/v2/detections?numResults=${MAX_ITEMS}&sortBy=date_desc`, {
         signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-        headers: { Accept: 'application/json', 'User-Agent': 'OpenSkyLight/1.0 (family calendar display)' }
+        headers: { Accept: 'application/json', 'User-Agent': 'KitchenSkylight/1.0 (family calendar display)' }
       })
       if (!res.ok) throw new Error(`BirdNET-Go returned HTTP ${res.status}`)
       const detections = parseDetections(await res.json(), origin)

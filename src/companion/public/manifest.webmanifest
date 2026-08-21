@@ -1,7 +1,7 @@
 {
-  "name": "OpenSkyLight",
-  "short_name": "SkyLight",
-  "description": "Family lists, meals, and chores — companion to the OpenSkyLight kiosk",
+  "name": "Kitchen Skylight",
+  "short_name": "Skylight",
+  "description": "Family lists, meals, and chores — companion to the Kitchen Skylight kiosk",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#f5efe3",

@@ -2,7 +2,7 @@ import { DateTime } from 'luxon'
 import { isoUtc } from '@shared/dates'
 
 /**
- * Pure mapping between Google Calendar API event resources and OpenSkyLight
+ * Pure mapping between Google Calendar API event resources and Kitchen Skylight
  * event rows. No Electron or network imports — fully unit-testable.
  */
 

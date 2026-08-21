@@ -125,7 +125,7 @@ describe('companionServer', () => {
     const { base, token } = await boot()
     const health = await fetch(`${base}/api/health`)
     expect(health.status).toBe(200)
-    expect(((await health.json()) as { app: string }).app).toBe('openskylight')
+    expect(((await health.json()) as { app: string }).app).toBe('kitchen-skylight')
 
     const noAuth = await fetch(`${base}/api/rpc/lists:getAll`, { method: 'POST' })
     expect(noAuth.status).toBe(401)

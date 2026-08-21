@@ -54,7 +54,7 @@ try {
 
   // the static shell serves
   const shell = await fetch(`${base}/`)
-  if (shell.status !== 200 || !(await shell.text()).includes('OpenSkyLight')) throw new Error('shell not served')
+  if (shell.status !== 200 || !(await shell.text()).includes('Kitchen Skylight')) throw new Error('shell not served')
 
   // a "phone" mutation: create a list + item, set a meal, then verify the data
   const created = await (await rpc('lists:create', { name: 'Phone groceries', color: '#46A758', kind: 'grocery' })).json()

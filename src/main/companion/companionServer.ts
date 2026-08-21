@@ -166,7 +166,7 @@ export function createCompanionServer(deps: CompanionServerDeps) {
   function onRequest(req: IncomingMessage, res: ServerResponse): void {
     const url = req.url ?? '/'
     if (url === '/api/health' && req.method === 'GET') {
-      sendJson(res, 200, { app: 'openskylight', version: deps.version })
+      sendJson(res, 200, { app: 'kitchen-skylight', version: deps.version })
       return
     }
     const rpcMatch = url.match(/^\/api\/rpc\/([^/?]+)$/)

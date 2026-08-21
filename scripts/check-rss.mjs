@@ -16,7 +16,7 @@ for (const [id, url] of FEEDS) {
   try {
     const res = await fetch(url, {
       signal: AbortSignal.timeout(15000),
-      headers: { 'User-Agent': 'OpenSkyLight/1.0 (family calendar display)' }
+      headers: { 'User-Agent': 'KitchenSkylight/1.0 (family calendar display)' }
     })
     const body = res.ok ? await res.text() : ''
     const itemCount = (body.match(/<item[\s>]/g) ?? []).length + (body.match(/<entry[\s>]/g) ?? []).length

@@ -131,7 +131,7 @@ How it works and what to know:
 - Pairing lives behind the parental PIN, and a paired phone gets parent-level
   editing of lists/meals/chores only — it can never reach settings, sync
   credentials, or cameras.
-- If a phone can't connect, allow OpenSkyLight through **Windows Firewall**
+- If a phone can't connect, allow Kitchen Skylight through **Windows Firewall**
   (Private networks) on the kiosk machine.
 - Away-from-home access: run [Tailscale](https://tailscale.com) on the kiosk
   and your phone and it works from anywhere, unchanged. (Traffic on your LAN is
@@ -176,7 +176,7 @@ test suite, and publishes the release; every kiosk picks it up automatically.
 3. Windows Settings: set power options so the OS never sleeps (the app manages
    display dimming through its own sleep schedule), enable auto-login
 4. The installed app runs fullscreen kiosk by default; launch with
-   `OpenSkyLight.exe --windowed` if you ever need a window
+   `Kitchen Skylight.exe --windowed` if you ever need a window
 
 ## Development
 
@@ -192,7 +192,7 @@ npm run dist       # NSIS installer + portable exe (Windows)
 ```
 
 Production builds run fullscreen kiosk by default; pass `--windowed` to opt out.
-Data lives in SQLite at `%APPDATA%/openskylight/openskylight.db`.
+Data lives in SQLite at `%APPDATA%/kitchen-skylight/kitchen-skylight.db`.
 
 ## Architecture
 

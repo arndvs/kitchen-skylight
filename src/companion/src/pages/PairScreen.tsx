@@ -4,7 +4,7 @@ export function PairScreen({ onRetry }: { onRetry: () => void }) {
   return (
     <div className="flex h-full flex-col items-center justify-center gap-5 px-8 text-center">
       <img src="/icon-192.png" alt="" className="h-20 w-20 rounded-3xl shadow-card" />
-      <h1 className="font-display text-3xl font-semibold">OpenSkyLight</h1>
+      <h1 className="font-display text-3xl font-semibold">Kitchen Skylight</h1>
       <p className="max-w-xs text-base font-semibold text-ink-soft">
         This phone isn't paired with the family display.
       </p>

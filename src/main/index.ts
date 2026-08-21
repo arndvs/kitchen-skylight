@@ -52,7 +52,7 @@ if (!gotLock) {
   })
 
   app.whenReady().then(() => {
-    const { db } = openDatabase(join(app.getPath('userData'), 'openskylight.db'))
+    const { db } = openDatabase(join(app.getPath('userData'), 'kitchen-skylight.db'))
     const deviceTz = (): string => DateTime.local().zoneName ?? 'UTC'
 
     const settings = createSettingsService(db)

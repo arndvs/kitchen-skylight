@@ -1013,7 +1013,7 @@ function CompanionSection() {
               )}
             </div>
             <p className="text-sm font-semibold text-ink-faint">
-              If phones can't connect, allow OpenSkyLight through Windows Firewall (Private networks).
+              If phones can't connect, allow Kitchen Skylight through Windows Firewall (Private networks).
             </p>
           </>
         )}
@@ -1204,7 +1204,7 @@ function GeneralTab() {
       </div>
       <div className="flex items-center gap-3 rounded-2xl bg-paper-deep/50 p-4">
         <span className="flex-1 text-base font-semibold text-ink-soft">
-          Launch OpenSkyLight when the computer starts (installed app only)
+          Launch Kitchen Skylight when the computer starts (installed app only)
         </span>
         <Toggle
           checked={settings.launchOnStartup}

@@ -1,6 +1,21 @@
-# OpenSkyLight
+# Kitchen Skylight
 
-An open-source, fully standalone family calendar display — a [Skylight Calendar](https://myskylight.com) alternative with no subscription, no cloud account, and no Home Assistant. One Electron app owns the whole touchscreen: calendar, family member color coding, Google sync, weather, chores, rewards, lists, meals, news, live cameras, and a photo screensaver.
+A family kitchen display — an always-on touchscreen "skylight" for the home.
+Built on [OpenSkyLight](https://github.com/lowerygt/OpenSkyLight), an
+open-source, fully standalone family calendar display — a
+[Skylight Calendar](https://myskylight.com) alternative with no subscription,
+no cloud account, and no Home Assistant. One Electron app owns the whole
+touchscreen: calendar, family member color coding, Google sync, weather,
+chores, rewards, lists, meals, news, live cameras, and a photo screensaver.
+
+## About this fork
+
+This is a personal fork customized for a family kitchen display. The focus is
+**calendar + recipes**, with room to grow into home automation later.
+
+- **Hardware:** Dell OptiPlex 7060 (i5-8500T, 8GB RAM, 512GB SSD), Windows 11
+- **Display:** 1920×1080 touchscreen
+- **Backup:** See [docs/BACKUP.md](docs/BACKUP.md)
 
 ## What it looks like
 
@@ -132,9 +147,11 @@ How it works and what to know:
 
 ### Ideas for later
 
-Recipe storage, drag-to-reorder lists, portrait-layout pass, hard panel
-power-off via the Win32 API, AI imports (Magic Import-style), companion
-mobile/web access.
+- **Recipe storage** (primary focus): a full recipe library with search,
+  ingredients, and step-by-step cooking mode
+- Drag-to-reorder lists, portrait-layout pass, hard panel power-off via the
+  Win32 API, AI imports (Magic Import-style), companion mobile/web access
+- Home automation integration (lights, thermostat, etc.)
 
 ## Releases and auto-update
 

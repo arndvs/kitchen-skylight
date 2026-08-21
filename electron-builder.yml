@@ -1,5 +1,5 @@
-appId: com.openskylight.app
-productName: OpenSkyLight
+appId: com.kitchenskylight.app
+productName: Kitchen Skylight
 directories:
   output: dist
   buildResources: resources
@@ -10,8 +10,8 @@ asarUnpack:
   - node_modules/ffmpeg-static/**
 publish:
   provider: github
-  owner: lowerygt
-  repo: OpenSkyLight
+  owner: arndvs
+  repo: kitchen-skylight
   releaseType: release
 win:
   target:

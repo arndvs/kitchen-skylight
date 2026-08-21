@@ -1,11 +1,11 @@
 {
-  "name": "openskylight",
+  "name": "kitchen-skylight",
   "version": "0.8.0",
-  "description": "OpenSkyLight — an open-source standalone family calendar display (Skylight Calendar clone)",
+  "description": "Kitchen Skylight — family calendar, recipes, and home automation hub (fork of OpenSkyLight)",
   "main": "./out/main/index.js",
-  "author": "Tyler",
+  "author": "arndvs",
   "license": "MIT",
-  "private": true,
+  "private": false,
   "scripts": {
     "dev": "electron-vite dev",
     "dev:windowed": "electron-vite dev -- --windowed",

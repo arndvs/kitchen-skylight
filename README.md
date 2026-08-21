@@ -171,6 +171,8 @@ test suite, and publishes the release; every kiosk picks it up automatically.
 
 ## Kiosk setup (Windows)
 
+See [docs/SETUP.md](docs/SETUP.md) for the full machine setup guide. In brief:
+
 1. `npm run dist`, then run the installer from `dist/` on the kiosk machine
 2. In the app: Settings → General → enable **Launch on startup**
 3. Windows Settings: set power options so the OS never sleeps (the app manages

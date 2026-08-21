@@ -44,7 +44,7 @@ byte-for-byte (bare-metal restore) — including Windows, all apps, and all data
 
 If a full disk image isn't feasible, at minimum back up the app data:
 
-- **OpenSkyLight data:** `%APPDATA%/openskylight/openskylight.db` (SQLite)
+- **Kitchen Skylight data:** `%APPDATA%/kitchen-skylight/kitchen-skylight.db` (SQLite)
 - **Photos:** the configured photo folder
 - **Config:** any `.env` or settings files
 

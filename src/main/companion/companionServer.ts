@@ -5,7 +5,7 @@ import type { IpcChannel, IpcResult } from '@shared/ipc/contract'
 import { COMPANION_CHANNELS } from '@shared/ipc/companionChannels'
 import type { SettingsService } from '../services/settingsService'
 import type { CompanionTokens } from './companionTokens'
-import { pickLanAddresses } from './lanAddress'
+import { pickLanAddresses, pickTailscaleAddress } from './lanAddress'
 
 const MAX_BODY_BYTES = 64 * 1024
 const AUTH_FAIL_LIMIT = 30 // failures per IP per minute → 429
@@ -229,23 +229,30 @@ export function createCompanionServer(deps: CompanionServerDeps) {
     start(port)
   }
 
-  function getStatus(): { running: boolean; port: number; urls: string[]; pairedCount: number; lastError: string | null } {
+  function getStatus() {
     const { port } = deps.settings.getAll().companion
     const running = server !== null && boundPort !== null
+    const tailscaleIp = pickTailscaleAddress()
     return {
       running,
       port,
       urls: running ? pickLanAddresses().map((ip) => `http://${ip}:${boundPort}/`) : [],
+      tailscaleIp,
       pairedCount: deps.tokens.count(),
       lastError
     }
   }
 
-  /** Mint a pairing URL — token rides in the fragment so it never reaches server logs. */
+  /**
+   * Mint a pairing URL — token rides in the fragment so it never reaches server
+   * logs. Prefers the Tailscale mesh address when up, because that's reachable
+   * from anywhere (not just the home LAN); falls back to the best LAN address.
+   */
   function issueToken(): { url: string } {
     const { port } = deps.settings.getAll().companion
     const token = deps.tokens.issue()
-    const [best] = pickLanAddresses()
+    const remoteIp = pickTailscaleAddress()
+    const best = remoteIp ?? pickLanAddresses()[0]
     return { url: `http://${best ?? 'localhost'}:${boundPort ?? port}/#t=${token}` }
   }
 

@@ -4,7 +4,7 @@ import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import type os from 'node:os'
 import { createCompanionTokens } from '../../src/main/companion/companionTokens'
-import { pickLanAddresses } from '../../src/main/companion/lanAddress'
+import { pickLanAddresses, pickTailscaleAddress } from '../../src/main/companion/lanAddress'
 import { createCompanionServer, type CompanionServer } from '../../src/main/companion/companionServer'
 import type { SettingsService } from '../../src/main/services/settingsService'
 import type { IpcResult } from '../../src/shared/ipc/contract'
@@ -82,6 +82,39 @@ describe('pickLanAddresses', () => {
 
   it('returns empty for no usable interfaces', () => {
     expect(pickLanAddresses({})).toEqual([])
+  })
+})
+
+describe('pickTailscaleAddress', () => {
+  const iface = (address: string, family: 'IPv4' | 'IPv6' = 'IPv4'): os.NetworkInterfaceInfo =>
+    ({ address, internal: false, family, netmask: '', mac: '', cidr: null }) as os.NetworkInterfaceInfo
+
+  it('prefers a real Tailscale adapter, even over a 192.168 NIC', () => {
+    const result = pickTailscaleAddress({
+      'Tailscale': [iface('100.104.23.87')],
+      'Wi-Fi': [iface('192.168.0.42')]
+    })
+    expect(result).toBe('100.104.23.87')
+  })
+
+  it('detects a CGNAT 100.x address even without the adapter name hint', () => {
+    const result = pickTailscaleAddress({
+      'Ethernet': [iface('192.168.1.5')],
+      'SomeAdapter': [iface('100.64.1.1')]
+    })
+    expect(result).toBe('100.64.1.1')
+  })
+
+  it('ignores a real-NIC 100.x? no — returns null when only LAN addresses exist', () => {
+    const result = pickTailscaleAddress({
+      'Wi-Fi': [iface('192.168.0.42')],
+      'Loopback': [iface('127.0.0.1')]
+    })
+    expect(result).toBeNull()
+  })
+
+  it('returns null for no interfaces', () => {
+    expect(pickTailscaleAddress({})).toBeNull()
   })
 })
 

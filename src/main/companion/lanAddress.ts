@@ -34,3 +34,38 @@ export function pickLanAddresses(
   candidates.sort((a, b) => b.score - a.score)
   return [...new Set(candidates.map((c) => c.ip))]
 }
+
+/** Addresses in 100.64.0.0/10 are the CGNAT block Tailscale uses for its mesh. */
+function isCgnat(ip: string): boolean {
+  const m = /^(\d{1,3})\.(\d{1,3})\./.exec(ip)
+  if (!m) return false
+  const a = Number(m[1])
+  const b = Number(m[2])
+  return a === 100 && b >= 64 && b <= 127
+}
+
+/**
+ * The Tailscale mesh address for this machine, if the Tailscale adapter is up.
+ * Returns the IPv4 CGNAT (100.64.0.0/10) address or null if Tailscale isn't
+ * running. Pure and injectable so it's unit-testable on fixtures.
+ *
+ * Tailscale gives the adapter the OS name "Tailscale" on Windows/macOS; on
+ * Linux it's often an interface carrying a 100.x address without the hint, so
+ * we also match the CGNAT block directly. The LAN picker deliberately de-ranks
+ * these, so this is a separate helper for the "reachable from anywhere" story.
+ */
+export function pickTailscaleAddress(
+  ifaces: NodeJS.Dict<os.NetworkInterfaceInfo[]> = os.networkInterfaces()
+): string | null {
+  const matches: { ip: string; nameHint: boolean }[] = []
+  for (const [name, infos] of Object.entries(ifaces)) {
+    for (const info of infos ?? []) {
+      if (info.family !== 'IPv4' || info.internal) continue
+      if (!isCgnat(info.address)) continue
+      matches.push({ ip: info.address, nameHint: /tailscale/i.test(name) })
+    }
+  }
+  if (matches.length === 0) return null
+  matches.sort((a, b) => Number(b.nameHint) - Number(a.nameHint))
+  return matches[0].ip
+}

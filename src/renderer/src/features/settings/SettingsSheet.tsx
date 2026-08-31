@@ -1002,6 +1002,19 @@ function CompanionSection() {
               </span>
             </div>
 
+            {status?.tailscaleIp && (
+              <p className="flex items-center gap-2 text-sm font-semibold text-ink-soft">
+                <span className="h-2 w-2 shrink-0 rounded-full bg-green-600" aria-hidden />
+                Reachable from anywhere — Tailscale is on ({status.tailscaleIp})
+              </p>
+            )}
+            {companion.enabled && status?.running && !status.tailscaleIp && (
+              <p className="flex items-center gap-2 text-sm font-semibold text-ink-faint">
+                <span className="h-2 w-2 shrink-0 rounded-full bg-ink-faint/40" aria-hidden />
+                LAN only — install Tailscale to reach it away from home
+              </p>
+            )}
+
             <div className="flex gap-3">
               <BigButton onClick={() => void pair()} disabled={!status?.running}>
                 Pair a phone

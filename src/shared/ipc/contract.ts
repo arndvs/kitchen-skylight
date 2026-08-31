@@ -165,7 +165,15 @@ export type IpcContract = {
 
   'companion:getStatus': {
     req: void
-    res: { running: boolean; port: number; urls: string[]; pairedCount: number; lastError: string | null }
+    res: {
+      running: boolean
+      port: number
+      urls: string[]
+      /** 100.x Tailscale mesh address, if the Tailnet adapter is up. */
+      tailscaleIp: string | null
+      pairedCount: number
+      lastError: string | null
+    }
   }
   /** Mints a fresh pairing token (parent-gated); the token only ever lives in the URL fragment. */
   'companion:issueToken': { req: void; res: { url: string } }

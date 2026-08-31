@@ -64,6 +64,22 @@ npm run dist
 
 This produces an NSIS installer and a portable exe in `dist/`.
 
+> **Windows note — unsigned builds and the winCodeSign symlink error:** on a
+> machine without Developer Mode, `npm run dist` can fail with
+> *"Cannot create symbolic link: A required privilege is not held by the client"
+>* icon (`winCodeSign/darwin/.../libcrypto.dylib`). electron-builder always
+> extracts the code-signing toolkit even for unsigned builds, and it contains
+> macOS symlinks Windows won't create without the `SeCreateSymbolicLinkPrivilege`
+> (granted by Developer Mode). Fix: either enable **Developer Mode**
+> (Settings → Privacy & Security → For developers) or build with the signing
+> step disabled:
+>
+> ```bash
+> ./node_modules/.bin/electron-builder --config.win.signAndEditExecutable=false
+> ```
+>
+> The result is an unsigned installer (fine for personal, internal use).
+
 ## 5. Install on the kiosk
 
 1. Run the installer from `dist/`.

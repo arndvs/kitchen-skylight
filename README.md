@@ -133,9 +133,11 @@ How it works and what to know:
   credentials, or cameras.
 - If a phone can't connect, allow Kitchen Skylight through **Windows Firewall**
   (Private networks) on the kiosk machine.
-- Away-from-home access: run [Tailscale](https://tailscale.com) on the kiosk
-  and your phone and it works from anywhere, unchanged. (Traffic on your LAN is
-  plain HTTP — fine for a home network, which is the threat model here.)
+- **Reach it from anywhere** (not just home Wi-Fi): run
+  [Tailscale](https://tailscale.com) on the kiosk and your phone — the app then
+  detects the tailnet address, shows “Reachable from anywhere” in companion
+  settings, and the pairing QR works from any network. See
+  [docs/REMOTE_ACCESS.md](docs/REMOTE_ACCESS.md).
 
 ### Connecting Google Calendar
 

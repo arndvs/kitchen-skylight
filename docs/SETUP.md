@@ -84,12 +84,37 @@ This produces an NSIS installer and a portable exe in `dist/`.
 
 1. Run the installer from `dist/`.
 2. In the app: **Settings → General → enable Launch on startup**.
-3. Windows Settings → Accounts → enable **auto-login** (so the kiosk boots
-   straight into the app after a power cut).
-4. Windows Settings → System → Power: set the machine to **never sleep** (the
+3. Windows Settings → System → Power: set the machine to **never sleep** (the
    app manages display dimming through its own sleep schedule).
-5. The installed app runs **fullscreen kiosk** by default. To get a window for
+4. The installed app runs **fullscreen kiosk** by default. To get a window for
    troubleshooting, launch `Kitchen Skylight.exe --windowed`.
+
+### True always-on kiosk mode (recommended)
+
+For a wall appliance that boots straight into the app with **no login screen at
+all**, use Windows **Assigned Access (kiosk mode)** instead of fighting
+auto-login. This sidesteps PIN / Microsoft-account friction entirely and is the
+proper way to run an always-on display. From an **elevated** PowerShell (run as
+Administrator):
+
+```powershell
+powershell -ExecutionPolicy Bypass -File .\scripts\setup-kiosk.ps1
+```
+
+The script:
+- Creates a dedicated local `kiosk` user (no password, no MS-account link)
+- Assigns that user to launch only `Kitchen Skylight.exe` fullscreen
+- Makes the kiosk account auto-login at boot
+
+Then reboot — the machine boots directly into the app. To undo:
+
+```powershell
+Remove-AssignedAccess -UserName kiosk
+Remove-LocalUser -Name kiosk
+```
+
+If you keep the normal account instead, launching `Kitchen Skylight.exe
+--windowed` gives a window for troubleshooting.
 
 ## 6. First-run configuration
 

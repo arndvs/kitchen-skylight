@@ -130,7 +130,8 @@ export function Header() {
           { value: 'month', label: 'Month' },
           { value: 'agenda', label: 'Agenda' },
           { value: 'chores', label: 'Chores' },
-          { value: 'lists', label: 'Lists' }
+          { value: 'lists', label: 'Lists' },
+          { value: 'recipes', label: 'Recipes' }
         ]}
       />
 

@@ -276,6 +276,25 @@ export function useMealMutations() {
   }
 }
 
+export function useRecipes() {
+  return useQuery({ queryKey: ['recipes'], queryFn: () => ipcInvoke('recipes:list', undefined) })
+}
+
+export function useRecipeMutations() {
+  const keys = [['recipes']]
+  return {
+    create: useInvalidatingMutation(
+      (input: Parameters<typeof ipcInvoke<'recipes:create'>>[1]) => ipcInvoke('recipes:create', input),
+      keys
+    ),
+    update: useInvalidatingMutation(
+      (input: Parameters<typeof ipcInvoke<'recipes:update'>>[1]) => ipcInvoke('recipes:update', input),
+      keys
+    ),
+    remove: useInvalidatingMutation((input: { id: string }) => ipcInvoke('recipes:delete', input), keys)
+  }
+}
+
 export function useWeather() {
   return useQuery({
     queryKey: ['weather'],

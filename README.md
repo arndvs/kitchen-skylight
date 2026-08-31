@@ -147,10 +147,45 @@ How it works and what to know:
 4. In the app: Settings → Calendars → paste the client ID + secret → Save & connect
 5. Sign in via the browser window that opens, then choose which calendars to sync
 
+### Recipes
+
+The **Recipes** tab (in the header) is a searchable family recipe library with
+PIN-gated create/edit/delete, ingredient + step-by-step cook mode, and tags.
+Meal slots can link a library recipe so the meal strip shows its title.
+
+To import recipes from markdown (for example, to load a family cookbook or a
+notes file), run the bundled importer against a file or folder of `.md` files.
+It writes straight into the app's SQLite DB, so **close the app first**:
+
+```bash
+npm run import:recipes -- <file-or-dir>
+```
+
+Each markdown recipe looks like:
+
+```md
+# Fluffy Pancakes
+tags: breakfast, easy
+servings: 4
+prep: 5
+cook: 10
+source: https://example.com/pancakes
+
+## Ingredients
+- 1 cup all-purpose flour
+- 1 egg
+
+## Directions
+1. Whisk the dry ingredients.
+2. Cook on a hot griddle.
+```
+
+Put several recipes in one file separated by a `---` line. The data lives in the
+local SQLite DB (`%APPDATA%/kitchen-skylight/kitchen-skylight.db`) and is backed
+up with the machine.
+
 ### Ideas for later
 
-- **Recipe storage** (primary focus): a full recipe library with search,
-  ingredients, and step-by-step cooking mode
 - Drag-to-reorder lists, portrait-layout pass, hard panel power-off via the
   Win32 API, AI imports (Magic Import-style), companion mobile/web access
 - Home automation integration (lights, thermostat, etc.)

@@ -13,6 +13,7 @@
     "build": "electron-vite build && npm run build:companion",
     "build:companion": "vite build --config companion.vite.config.ts",
     "preview": "electron-vite preview",
+    "import:recipes": "electron scripts/import-recipes.cjs",
     "typecheck": "tsc --noEmit -p tsconfig.node.json && tsc --noEmit -p tsconfig.web.json",
     "test": "node scripts/run-vitest.mjs run",
     "test:watch": "node scripts/run-vitest.mjs",

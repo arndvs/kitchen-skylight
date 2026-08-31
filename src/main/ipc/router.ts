@@ -19,6 +19,7 @@ import type { ChoresService } from '../services/choresService'
 import type { RewardsService } from '../services/rewardsService'
 import type { ListsService } from '../services/listsService'
 import type { MealsService } from '../services/mealsService'
+import type { RecipesService } from '../services/recipesService'
 import type { Kiosk } from '../kiosk/kiosk'
 import type { Updater } from '../updater'
 import type { RssService } from '../services/rssService'
@@ -41,6 +42,7 @@ export interface Services {
   rewards: RewardsService
   lists: ListsService
   meals: MealsService
+  recipes: RecipesService
   kiosk: Kiosk
   updater: Updater
   rss: RssService
@@ -70,6 +72,9 @@ const PARENT_GATED: Set<IpcChannel> = new Set([
   'chores:create',
   'chores:update',
   'chores:delete',
+  'recipes:create',
+  'recipes:update',
+  'recipes:delete',
   'rewards:create',
   'rewards:update',
   'rewards:delete',
@@ -82,7 +87,7 @@ const PARENT_GATED: Set<IpcChannel> = new Set([
 ])
 
 /** Channels that mutate data, mapped to the domain the renderer should refetch. */
-type MutationDomain = 'events' | 'people' | 'calendars' | 'settings' | 'lists' | 'meals' | 'chores'
+type MutationDomain = 'events' | 'people' | 'calendars' | 'settings' | 'lists' | 'meals' | 'chores' | 'recipes'
 const MUTATION_DOMAINS: Partial<Record<IpcChannel, MutationDomain>> = {
   'settings:set': 'settings',
   'people:create': 'people',
@@ -106,6 +111,9 @@ const MUTATION_DOMAINS: Partial<Record<IpcChannel, MutationDomain>> = {
   'listItems:delete': 'lists',
   'listItems:clearChecked': 'lists',
   'meals:set': 'meals',
+  'recipes:create': 'recipes',
+  'recipes:update': 'recipes',
+  'recipes:delete': 'recipes',
   'chores:create': 'chores',
   'chores:update': 'chores',
   'chores:delete': 'chores',
@@ -273,6 +281,12 @@ export function buildChannelTable(services: Services): ChannelTable {
 
   handle('meals:getRange', s.mealsRangeSchema, (req) => services.meals.getRange(req.start, req.end))
   handle('meals:set', s.mealSetSchema, (req) => services.meals.set(req.date, req.slot, req.text))
+
+  handle('recipes:list', null, () => services.recipes.list())
+  handle('recipes:get', s.idSchema, (req) => services.recipes.get(req.id))
+  handle('recipes:create', s.recipeCreateSchema, (req) => services.recipes.create(req))
+  handle('recipes:update', s.recipeUpdateSchema, (req) => services.recipes.update(req))
+  handle('recipes:delete', s.idSchema, (req) => services.recipes.remove(req.id))
 
   handle('rss:getFeed', s.rssFeedSchema, (req) => services.rss.getFeed(req.feedId))
 

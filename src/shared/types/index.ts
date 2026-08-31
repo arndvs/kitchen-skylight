@@ -216,6 +216,47 @@ export interface MealSlotDto {
   text: string
 }
 
+export interface RecipeDto {
+  id: string
+  title: string
+  /** Parsed from the JSON-string column. */
+  ingredients: string[]
+  /** Free-form instructions (may be plain text or newline-separated steps). */
+  instructions: string | null
+  imagePath: string | null
+  tags: string[]
+  servings: number | null
+  prepMinutes: number | null
+  cookMinutes: number | null
+  srcUrl: string | null
+  createdAt: string
+}
+
+export interface RecipeCreateInput {
+  title: string
+  ingredients: string[]
+  instructions?: string | null
+  imagePath?: string | null
+  tags?: string[]
+  servings?: number | null
+  prepMinutes?: number | null
+  cookMinutes?: number | null
+  srcUrl?: string | null
+}
+
+export interface RecipeUpdateInput {
+  id: string
+  title?: string
+  ingredients?: string[]
+  instructions?: string | null
+  imagePath?: string | null
+  tags?: string[]
+  servings?: number | null
+  prepMinutes?: number | null
+  cookMinutes?: number | null
+  srcUrl?: string | null
+}
+
 export type ChoreRoutine = 'morning' | 'evening' | null
 
 export interface ChoreDto {

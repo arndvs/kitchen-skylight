@@ -17,6 +17,8 @@ export const COMPANION_CHANNELS: ReadonlySet<IpcChannel> = new Set<IpcChannel>([
   'listItems:clearChecked',
   'meals:getRange',
   'meals:set',
+  'recipes:list',
+  'recipes:get',
   'chores:list',
   'chores:create',
   'chores:update',

@@ -23,6 +23,7 @@ import { createChoresService } from './services/choresService'
 import { createRewardsService } from './services/rewardsService'
 import { createListsService } from './services/listsService'
 import { createMealsService } from './services/mealsService'
+import { createRecipesService } from './services/recipesService'
 import { createKiosk } from './kiosk/kiosk'
 import { createUpdater } from './updater'
 import { createRssService } from './services/rssService'
@@ -105,6 +106,7 @@ if (!gotLock) {
       rewards: createRewardsService(db, choresService),
       lists: createListsService(db),
       meals: createMealsService(db),
+      recipes: createRecipesService(db),
       kiosk,
       updater,
       rss: createRssService(),

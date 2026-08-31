@@ -205,6 +205,34 @@ export const choreUpdateSchema = z.object({
 export const choreDaySchema = z.object({ date: isoDate })
 export const choreCheckSchema = z.object({ choreId: id, date: isoDate })
 
+const stringArray = z.array(z.string().trim().min(1).max(500)).max(200)
+const optionalMinutes = z.number().int().min(0).max(10000).nullable().optional()
+
+export const recipeCreateSchema = z.object({
+  title: z.string().trim().min(1).max(200),
+  ingredients: stringArray,
+  instructions: z.string().max(20000).nullable().optional(),
+  imagePath: z.string().max(2000).nullable().optional(),
+  tags: stringArray.optional(),
+  servings: z.number().int().min(1).max(999).nullable().optional(),
+  prepMinutes: optionalMinutes,
+  cookMinutes: optionalMinutes,
+  srcUrl: z.string().trim().url().max(2000).nullable().optional()
+})
+
+export const recipeUpdateSchema = z.object({
+  id,
+  title: z.string().trim().min(1).max(200).optional(),
+  ingredients: stringArray.optional(),
+  instructions: z.string().max(20000).nullable().optional(),
+  imagePath: z.string().max(2000).nullable().optional(),
+  tags: stringArray.optional(),
+  servings: z.number().int().min(1).max(999).nullable().optional(),
+  prepMinutes: optionalMinutes,
+  cookMinutes: optionalMinutes,
+  srcUrl: z.string().trim().url().max(2000).nullable().optional()
+})
+
 export const rewardCreateSchema = z.object({
   title: z.string().trim().min(1).max(120),
   costStars: z.number().int().min(1).max(9999)

@@ -193,6 +193,13 @@ const MIGRATIONS: string[] = [
     key TEXT PRIMARY KEY,
     value TEXT NOT NULL
   );
+  `,
+  // 002 — recipe library columns (servings, prep/cook time, source URL)
+  `
+  ALTER TABLE recipes ADD COLUMN servings INTEGER;
+  ALTER TABLE recipes ADD COLUMN prep_minutes INTEGER;
+  ALTER TABLE recipes ADD COLUMN cook_minutes INTEGER;
+  ALTER TABLE recipes ADD COLUMN src_url TEXT;
   `
 ]
 

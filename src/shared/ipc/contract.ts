@@ -20,6 +20,9 @@ import type {
   PersonCreateInput,
   PersonDto,
   PersonUpdateInput,
+  RecipeCreateInput,
+  RecipeDto,
+  RecipeUpdateInput,
   RedemptionDto,
   RewardDto,
   StarBalanceDto
@@ -99,6 +102,12 @@ export type IpcContract = {
 
   'meals:getRange': { req: { start: string; end: string }; res: MealSlotDto[] }
   'meals:set': { req: { date: string; slot: MealSlotKind; text: string | null }; res: void }
+
+  'recipes:list': { req: void; res: RecipeDto[] }
+  'recipes:get': { req: { id: string }; res: RecipeDto }
+  'recipes:create': { req: RecipeCreateInput; res: RecipeDto }
+  'recipes:update': { req: RecipeUpdateInput; res: RecipeDto }
+  'recipes:delete': { req: { id: string }; res: void }
 
   'rewards:list': { req: void; res: RewardDto[] }
   'rewards:create': { req: { title: string; costStars: number }; res: RewardDto }
@@ -223,6 +232,7 @@ export const ALLOWED_CHANNEL_PREFIXES = [
   'lists:',
   'listItems:',
   'meals:',
+  'recipes:',
   'screensaver:',
   'kiosk:',
   'rss:',

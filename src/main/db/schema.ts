@@ -179,6 +179,10 @@ export const recipes = sqliteTable('recipes', {
   instructions: text('instructions'),
   imagePath: text('image_path'),
   tags: text('tags'), // JSON string[]
+  servings: integer('servings'),
+  prepMinutes: integer('prep_minutes'),
+  cookMinutes: integer('cook_minutes'),
+  srcUrl: text('src_url'),
   createdAt: text('created_at').notNull(),
   deletedAt: text('deleted_at')
 })

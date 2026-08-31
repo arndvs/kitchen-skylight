@@ -267,7 +267,9 @@ export const mealsRangeSchema = z.object({ start: isoDate, end: isoDate })
 export const mealSetSchema = z.object({
   date: isoDate,
   slot: z.enum(['breakfast', 'lunch', 'dinner', 'snack']),
-  text: z.string().trim().max(200).nullable()
+  text: z.string().trim().max(200).nullable(),
+  /** Link this meal to a library recipe (null clears the link; free-text still wins when set). */
+  recipeId: id.nullable().optional()
 })
 
 export const citySearchSchema = z.object({ query: z.string().trim().min(2).max(80) })

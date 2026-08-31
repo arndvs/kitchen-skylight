@@ -214,6 +214,8 @@ export interface MealSlotDto {
   date: string
   slot: MealSlotKind
   text: string
+  /** Set when this meal is linked to a library recipe. */
+  recipe: { id: string; title: string } | null
 }
 
 export interface RecipeDto {

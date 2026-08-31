@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { openDatabase, type DbHandle } from '../../src/main/db/client'
 import { createListsService, type ListsService } from '../../src/main/services/listsService'
 import { createMealsService, type MealsService } from '../../src/main/services/mealsService'
+import { createRecipesService } from '../../src/main/services/recipesService'
 
 describe('lists', () => {
   let handle: DbHandle
@@ -74,5 +75,24 @@ describe('meals', () => {
     meals.set('2026-06-15', 'dinner', 'Out of range')
     const week = meals.getRange('2026-06-08', '2026-06-14')
     expect(week.map((m) => m.text).sort()).toEqual(['Soup', 'Stew'])
+  })
+
+  it('links a meal to a library recipe and reports its title', () => {
+    const recipes = createRecipesService(handle.db)
+    const recipe = recipes.create({ title: 'Big Pot of Chili', ingredients: ['beans'] })
+    // Free-text still wins when both a recipe and text are given.
+    meals.set('2026-06-10', 'dinner', null, recipe.id)
+    const linked = meals.getRange('2026-06-10', '2026-06-10')[0]
+    expect(linked.text).toBe('')
+    expect(linked.recipe).toEqual({ id: recipe.id, title: 'Big Pot of Chili' })
+  })
+
+  it('free-text overrides a recipe link', () => {
+    const recipes = createRecipesService(handle.db)
+    const recipe = recipes.create({ title: 'Pizza', ingredients: [] })
+    meals.set('2026-06-10', 'dinner', 'Leftovers', recipe.id)
+    const meal = meals.getRange('2026-06-10', '2026-06-10')[0]
+    expect(meal.text).toBe('Leftovers')
+    expect(meal.recipe).toBeNull()
   })
 })

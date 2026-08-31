@@ -101,7 +101,10 @@ export type IpcContract = {
   'listItems:clearChecked': { req: { listId: string }; res: void }
 
   'meals:getRange': { req: { start: string; end: string }; res: MealSlotDto[] }
-  'meals:set': { req: { date: string; slot: MealSlotKind; text: string | null }; res: void }
+  'meals:set': {
+    req: { date: string; slot: MealSlotKind; text: string | null; recipeId?: string | null }
+    res: void
+  }
 
   'recipes:list': { req: void; res: RecipeDto[] }
   'recipes:get': { req: { id: string }; res: RecipeDto }

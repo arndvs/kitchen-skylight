@@ -280,7 +280,7 @@ export function buildChannelTable(services: Services): ChannelTable {
   handle('listItems:clearChecked', s.listIdSchema, (req) => services.lists.clearChecked(req.listId))
 
   handle('meals:getRange', s.mealsRangeSchema, (req) => services.meals.getRange(req.start, req.end))
-  handle('meals:set', s.mealSetSchema, (req) => services.meals.set(req.date, req.slot, req.text))
+  handle('meals:set', s.mealSetSchema, (req) => services.meals.set(req.date, req.slot, req.text, req.recipeId))
 
   handle('recipes:list', null, () => services.recipes.list())
   handle('recipes:get', s.idSchema, (req) => services.recipes.get(req.id))

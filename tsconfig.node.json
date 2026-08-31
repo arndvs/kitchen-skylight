@@ -16,10 +16,9 @@
     "noEmit": false,
     "emitDeclarationOnly": true,
     "outDir": "./out/types-node",
-    "baseUrl": ".",
     "paths": {
-      "@shared/*": ["src/shared/*"],
-      "@main/*": ["src/main/*"]
+      "@shared/*": ["./src/shared/*"],
+      "@main/*": ["./src/main/*"]
     }
   },
   "include": [

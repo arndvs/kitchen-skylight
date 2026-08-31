@@ -36,10 +36,11 @@ if (-not (Test-Path $AppPath)) {
 # --- 1. Create the kiosk user (if missing) ---
 if (-not (Get-LocalUser -Name $KioskUser -ErrorAction SilentlyContinue)) {
   Write-Host "Creating local user '$KioskUser'..."
-  # A kiosk account needs no password. New-LocalUser rejects an empty SecureString,
-  # so omit the password entirely and mark it as not password-required.
-  New-LocalUser -Name $KioskUser -Description 'Kitchen Skylight kiosk account' -AccountNeverExpires
-  Set-LocalUser -Name $KioskUser -Password $null
+  # A kiosk account needs no password. New-LocalUser requires the -Password
+  # parameter but rejects an empty string; pass an empty but valid SecureString
+  # so the account is created passwordless (no interactive prompt).
+  $emptyPw = New-Object System.Security.SecureString
+  New-LocalUser -Name $KioskUser -Password $emptyPw -Description 'Kitchen Skylight kiosk account' -AccountNeverExpires
   Write-Host "User '$KioskUser' created."
 } else {
   Write-Host "User '$KioskUser' already exists - keeping it."

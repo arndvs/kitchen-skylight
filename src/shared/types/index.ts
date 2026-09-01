@@ -335,7 +335,7 @@ export interface AppSettings {
   defaultView: CalendarViewKind
   timeFormat: '12h' | '24h'
   temperatureUnit: 'f' | 'c'
-  /** 'auto' = dark from sunset to sunrise (sun times from the weather location) */
+  /** 'auto' = dark outside the 7am–6pm light window */
   theme: 'light' | 'dark' | 'auto'
   weather: { lat: number; lon: number; label: string } | null
   sleep: { enabled: boolean; start: string; end: string }

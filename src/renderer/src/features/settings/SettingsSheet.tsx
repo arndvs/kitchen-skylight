@@ -1166,14 +1166,12 @@ function GeneralTab() {
           options={[
             { value: 'light', label: 'Light' },
             { value: 'dark', label: 'Dark' },
-            { value: 'auto', label: 'Sunset to sunrise' }
+            { value: 'auto', label: '7am to 6pm' }
           ]}
         />
         {settings.theme === 'auto' && (
           <p className="mt-2 text-sm font-semibold text-ink-faint">
-            {settings.weather
-              ? `Sun times computed for ${settings.weather.label}.`
-              : 'No location set — using 7:00 pm to 7:00 am. Pick a weather location below for real sun times.'}
+            Light from 7:00 am to 6:00 pm, dark otherwise.
           </p>
         )}
       </div>

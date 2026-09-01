@@ -9,17 +9,16 @@ function applyTheme(settings: AppSettings | undefined): void {
   // do nothing until settings load — applying the 'auto' fallback early would
   // flash the wrong theme for users with an explicit light/dark choice
   if (!settings) return
-  const weather = settings.weather ? { lat: settings.weather.lat, lon: settings.weather.lon } : null
   const dark =
     settings.theme === 'dark' ||
-    (settings.theme === 'auto' && isNightAt(DateTime.now().setZone(ZONE), weather))
+    (settings.theme === 'auto' && isNightAt(DateTime.now().setZone(ZONE)))
   document.documentElement.classList.toggle('dark', dark)
 }
 
 /**
- * Applies the theme to <html>. 'auto' follows the sun at the configured
- * weather location (computed locally — no network). The minute re-check runs
- * outside React state so the app tree is NOT re-rendered every tick.
+ * Applies the theme to <html>. 'auto' is light 7am–6pm and dark otherwise.
+ * The minute re-check runs outside React state so the app tree is NOT
+ * re-rendered every tick.
  */
 export function useTheme(): void {
   const { data: settings } = useSettings()

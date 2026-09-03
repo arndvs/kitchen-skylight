@@ -65,13 +65,13 @@ export function SegmentedControl<T extends string>({
   onChange: (value: T) => void
 }) {
   return (
-    <div className="flex rounded-2xl bg-paper-deep p-1">
+    <div className="flex min-w-0 shrink overflow-x-auto rounded-2xl bg-paper-deep p-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
       {options.map((opt) => (
         <button
           key={opt.value}
           type="button"
           onClick={() => onChange(opt.value)}
-          className={`pressable min-h-11 rounded-xl px-2 text-base font-bold transition-colors min-[1500px]:px-3 ${
+          className={`pressable min-h-11 shrink-0 rounded-xl px-2 text-base font-bold transition-colors min-[1500px]:px-3 ${
             value === opt.value ? 'bg-card text-ink shadow-card' : 'text-ink-soft'
           }`}
         >

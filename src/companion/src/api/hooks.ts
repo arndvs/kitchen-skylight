@@ -26,6 +26,10 @@ export function useChoresDay(date: string) {
   return useQuery({ queryKey: ['choresDay', date], queryFn: () => rpc('chores:getDay', { date }), ...LIVE })
 }
 
+export function useRecipes() {
+  return useQuery({ queryKey: ['recipes'], queryFn: () => rpc('recipes:list', undefined), ...LIVE })
+}
+
 export function useChores() {
   return useQuery({ queryKey: ['chores'], queryFn: () => rpc('chores:list', undefined), ...LIVE })
 }

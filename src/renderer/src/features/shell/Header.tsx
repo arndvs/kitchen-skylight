@@ -102,7 +102,7 @@ export function Header() {
       )}
 
       {/* period nav (removed from layout where it isn't meaningful — space matters here) */}
-      {view !== 'lists' && view !== 'home' && (
+      {view !== 'lists' && view !== 'home' && view !== 'recipes' && (
         <div className="flex shrink-0 items-center gap-1 rounded-2xl bg-paper-deep/70 p-1">
           <IconButton label="Previous" onClick={() => step(-1)}>
             <ChevronLeftIcon />
@@ -135,7 +135,7 @@ export function Header() {
         ]}
       />
 
-      <IconButton label="Settings" onClick={() => setSettingsOpen(true)}>
+      <IconButton label="Settings" onClick={() => setSettingsOpen(true)} className="shrink-0">
         <GearIcon size={26} />
       </IconButton>
     </header>

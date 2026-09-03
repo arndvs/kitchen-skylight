@@ -510,11 +510,12 @@ function Stepper({ value, onChange, min = 0, max = 99 }: { value: number; onChan
 }
 
 const WEEKDAY_SHORT = ['M', 'T', 'W', 'T', 'F', 'S', 'S']
-type ScheduleKind = 'daily' | 'weekly' | 'once'
+type ScheduleKind = 'daily' | 'weekly' | 'biweekly' | 'once'
 
 function scheduleOf(recurrence: RecurrenceInput | null): ScheduleKind {
   if (!recurrence) return 'once'
-  return recurrence.freq === 'weekly' ? 'weekly' : 'daily'
+  if (recurrence.freq === 'weekly') return recurrence.interval === 2 ? 'biweekly' : 'weekly'
+  return 'daily'
 }
 
 function ChoresTab() {
@@ -564,7 +565,7 @@ function ChoresTab() {
         ? null
         : schedule === 'daily'
           ? { freq: 'daily' }
-          : { freq: 'weekly', byWeekdays: weekdays.length > 0 ? weekdays : [0] }
+          : { freq: 'weekly', interval: schedule === 'biweekly' ? 2 : 1, byWeekdays: weekdays.length > 0 ? weekdays : [0] }
     const common = {
       title: choreTitle.trim(),
       personId: chorePerson,
@@ -728,10 +729,11 @@ function ChoresTab() {
               options={[
                 { value: 'daily', label: 'Every day' },
                 { value: 'weekly', label: 'Weekly' },
+                { value: 'biweekly', label: 'Bi-weekly' },
                 { value: 'once', label: 'One time' }
               ]}
             />
-            {schedule === 'weekly' && (
+            {(schedule === 'weekly' || schedule === 'biweekly') && (
               <div className="mt-3 flex gap-2">
                 {WEEKDAY_SHORT.map((label, i) => {
                   const on = weekdays.includes(i)

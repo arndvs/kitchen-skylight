@@ -26,6 +26,12 @@ export function createMainWindow(): BrowserWindow {
   win.once('ready-to-show', () => win.show())
   // Pinch-zoom on a touchscreen must not scale the kiosk UI
   win.webContents.setVisualZoomLevelLimits(1, 1)
+  // Allow the renderer to use the microphone for voice input (dictation).
+  // This is a family kiosk — the mic is only used for speech-to-text into
+  // text fields, never recorded or sent anywhere.
+  win.webContents.session.setPermissionRequestHandler((_wc, permission, callback) => {
+    callback(permission === 'media')
+  })
   // Any external link goes to the system browser, never inside the kiosk
   win.webContents.setWindowOpenHandler(({ url }) => {
     void shell.openExternal(url)

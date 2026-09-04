@@ -2,6 +2,7 @@ import { useEffect, useId, useRef, useState } from 'react'
 import { create } from 'zustand'
 import Keyboard from 'react-simple-keyboard'
 import 'react-simple-keyboard/build/css/index.css'
+import { MicIcon } from './icons'
 
 interface OskTarget {
   id: string
@@ -15,8 +16,6 @@ interface OskState {
   echo: number
   open(target: OskTarget): void
   close(): void
-  /** close only if `id` is still the active target (used by input blur) */
-  closeIf(id: string): void
   bump(): void
 }
 
@@ -25,9 +24,73 @@ export const useOsk = create<OskState>((set) => ({
   echo: 0,
   open: (target) => set({ target }),
   close: () => set({ target: null }),
-  closeIf: (id) => set((s) => (s.target?.id === id ? { target: null } : {})),
   bump: () => set((s) => ({ echo: s.echo + 1 }))
 }))
+
+/**
+ * Voice input via the Web Speech API. Returns a `listen` function that starts
+ * (or stops) dictation and appends the transcript to the current value.
+ * `supported` is false when the browser has no speech recognition (e.g. the
+ * Windows Speech Platform isn't installed) — the mic button is hidden then.
+ */
+function useVoiceInput(): {
+  supported: boolean
+  listening: boolean
+  listen: (onResult: (text: string) => void) => void
+} {
+  const [listening, setListening] = useState(false)
+  const recRef = useRef<{ stop: () => void } | null>(null)
+  const supported =
+    typeof window !== 'undefined' &&
+    ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)
+
+  const listen = (onResult: (text: string) => void): void => {
+    if (recRef.current) {
+      recRef.current.stop()
+      recRef.current = null
+      setListening(false)
+      return
+    }
+    const SR = (window as unknown as { webkitSpeechRecognition?: new () => unknown; SpeechRecognition?: new () => unknown })
+    const Ctor = SR.webkitSpeechRecognition ?? SR.SpeechRecognition
+    if (!Ctor) return
+    const rec = new Ctor() as {
+      lang: string
+      interimResults: boolean
+      continuous: boolean
+      onresult: ((e: { results: { [i: number]: { [j: number]: { transcript: string } } } }) => void) | null
+      onend: (() => void) | null
+      onerror: (() => void) | null
+      start: () => void
+      stop: () => void
+    }
+    rec.lang = 'en-US'
+    rec.interimResults = false
+    rec.continuous = false
+    rec.onresult = (e) => {
+      const text = e.results[0]?.[0]?.transcript ?? ''
+      if (text) onResult(text)
+    }
+    rec.onend = () => {
+      recRef.current = null
+      setListening(false)
+    }
+    rec.onerror = () => {
+      recRef.current = null
+      setListening(false)
+    }
+    recRef.current = rec
+    setListening(true)
+    try {
+      rec.start()
+    } catch {
+      recRef.current = null
+      setListening(false)
+    }
+  }
+
+  return { supported, listening, listen }
+}
 
 export function OskInput({
   value,
@@ -49,20 +112,21 @@ export function OskInput({
   cbRef.current = onChange
   const { open, bump, target } = useOsk()
 
+  // Open on pointerdown (fires before focus on touch) so a single tap reliably
+  // brings up the keyboard. `focus` alone is unreliable on touch — the browser
+  // can fire a transient blur right after, which used to close the tray.
+  const openFor = (): void => {
+    open({ id, get: () => valRef.current, set: (v) => cbRef.current(v) })
+  }
+
   return (
     <input
       type="text"
       value={value}
       placeholder={placeholder}
       autoFocus={autoFocus}
-      onFocus={(e) => {
-        open({ id, get: () => valRef.current, set: (v) => cbRef.current(v) })
-        e.target.scrollIntoView({ block: 'center', behavior: 'smooth' })
-      }}
-      onBlur={() => {
-        // keyboard keys preventDefault on mousedown, so blur means a real tap elsewhere
-        window.setTimeout(() => useOsk.getState().closeIf(id), 150)
-      }}
+      onPointerDown={openFor}
+      onFocus={openFor}
       onChange={(e) => {
         onChange(e.target.value)
         if (target?.id === id) bump()
@@ -102,6 +166,7 @@ export function OskTray() {
   const { target, close, echo } = useOsk()
   const keyboardRef = useRef<{ setInput: (v: string) => void } | null>(null)
   const [layout, setLayout] = useState<'default' | 'shift' | 'numbers'>('default')
+  const { supported, listening, listen } = useVoiceInput()
 
   useEffect(() => {
     if (target) keyboardRef.current?.setInput(target.get())
@@ -109,17 +174,23 @@ export function OskTray() {
   }, [target?.id, echo, target])
 
   // Any tap that is neither on the keyboard nor on a text input dismisses the
-  // tray. Listen to `click` (not pointerdown): closing earlier would reflow the
+  // tray. Listen to `pointerdown` (fires before click on touch) so the tap that
+  // focuses an input never races the close. Closing earlier would reflow the
   // dialog mid-gesture and the tap would land on the moved layout.
   useEffect(() => {
     if (!target) return
-    const onClick = (e: MouseEvent): void => {
+    const onPointerDown = (e: PointerEvent): void => {
       const el = e.target as HTMLElement | null
-      if (el?.closest('.osl-osk-tray') || el?.tagName === 'INPUT') return
-      close()
+      if (el?.closest('.osl-osk-tray') || el?.tagName === 'INPUT' || el?.tagName === 'TEXTAREA') return
+      // ignore the gesture that's still focusing an input (pointerdown precedes focus)
+      window.setTimeout(() => {
+        const active = document.activeElement as HTMLElement | null
+        if (active?.tagName === 'INPUT' || active?.tagName === 'TEXTAREA') return
+        useOsk.getState().close()
+      }, 0)
     }
-    document.addEventListener('click', onClick, true)
-    return () => document.removeEventListener('click', onClick, true)
+    document.addEventListener('pointerdown', onPointerDown, true)
+    return () => document.removeEventListener('pointerdown', onPointerDown, true)
   }, [target, close])
 
   if (!target) return null
@@ -127,6 +198,24 @@ export function OskTray() {
   return (
     <div className="osl-osk-tray fixed inset-x-0 bottom-0 z-[60] border-t border-line bg-paper/95 px-3 pt-3 pb-4 shadow-float backdrop-blur-md">
       <div className="mx-auto max-w-4xl">
+        <div className="mb-2 flex items-center justify-between">
+          <span className="text-sm font-bold text-ink-faint">
+            {listening ? 'Listening… tap the mic to stop' : 'Tap the mic to speak'}
+          </span>
+          {supported && (
+            <button
+              type="button"
+              onPointerDown={(e) => e.stopPropagation()}
+              onClick={() => listen((text) => target.set(target.get() + (target.get() ? ' ' : '') + text))}
+              className={`pressable flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
+                listening ? 'bg-ember text-white' : 'bg-paper-deep text-ink-soft'
+              }`}
+              aria-label={listening ? 'Stop listening' : 'Speak to type'}
+            >
+              <MicIcon size={22} />
+            </button>
+          )}
+        </div>
         <Keyboard
           keyboardRef={(r) => (keyboardRef.current = r)}
           theme="hg-theme-default osl-keyboard"

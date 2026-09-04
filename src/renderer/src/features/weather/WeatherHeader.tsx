@@ -64,29 +64,38 @@ export function WeatherButton() {
         )}
       </button>
 
-      <Dialog open={open} onClose={() => setOpen(false)} title={weather.label}>
-        <div className="grid grid-cols-5 gap-2">
-          {weather.daily.map((d, i) => {
-            const DayIcon = weatherIcon(d.code, true)
-            return (
-              <div key={d.date} className="flex flex-col items-center gap-1.5 rounded-2xl bg-paper-deep/50 px-1 py-3">
-                <span className="text-sm font-extrabold text-ink-faint uppercase">
-                  {i === 0 ? 'Today' : DateTime.fromISO(d.date).toFormat('ccc')}
-                </span>
-                <DayIcon size={30} className="text-ember-deep" />
-                <span className="text-lg font-bold">{d.high}°</span>
-                <span className="text-base font-bold text-ink-faint">{d.low}°</span>
-                {d.precipProb !== null && d.precipProb > 20 && (
-                  <span className="text-xs font-extrabold text-[#0091FF]">{d.precipProb}%</span>
-                )}
-              </div>
-            )
-          })}
-        </div>
-        <p className="mt-4 text-center text-sm font-semibold text-ink-faint">
-          Updated {DateTime.fromISO(weather.fetchedAt).toRelative()} · change location in Settings
-        </p>
-      </Dialog>
+      <WeatherDialog open={open} onClose={() => setOpen(false)} />
     </>
+  )
+}
+
+/** Full 5-day forecast dialog, shared by the header button and the home tile. */
+export function WeatherDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
+  const { data: weather } = useWeather()
+  if (!weather) return null
+  return (
+    <Dialog open={open} onClose={onClose} title={weather.label}>
+      <div className="grid grid-cols-5 gap-2">
+        {weather.daily.map((d, i) => {
+          const DayIcon = weatherIcon(d.code, true)
+          return (
+            <div key={d.date} className="flex flex-col items-center gap-1.5 rounded-2xl bg-paper-deep/50 px-1 py-3">
+              <span className="text-sm font-extrabold text-ink-faint uppercase">
+                {i === 0 ? 'Today' : DateTime.fromISO(d.date).toFormat('ccc')}
+              </span>
+              <DayIcon size={30} className="text-ember-deep" />
+              <span className="text-lg font-bold">{d.high}°</span>
+              <span className="text-base font-bold text-ink-faint">{d.low}°</span>
+              {d.precipProb !== null && d.precipProb > 20 && (
+                <span className="text-xs font-extrabold text-[#0091FF]">{d.precipProb}%</span>
+              )}
+            </div>
+          )
+        })}
+      </div>
+      <p className="mt-4 text-center text-sm font-semibold text-ink-faint">
+        Updated {DateTime.fromISO(weather.fetchedAt).toRelative()} · change location in Settings
+      </p>
+    </Dialog>
   )
 }

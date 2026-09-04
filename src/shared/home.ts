@@ -24,7 +24,7 @@ export const TILE_SPECS: Record<HomeTileType, TileSpec> = {
   todayEvents: { minW: 3, minH: 3, defaultW: 4, defaultH: 6, allowMultiple: false, configKeys: [] },
   weekAgenda: { minW: 4, minH: 3, defaultW: 5, defaultH: 4, allowMultiple: false, configKeys: [] },
   weather: { minW: 2, minH: 2, defaultW: 3, defaultH: 2, allowMultiple: false, configKeys: [] },
-  choresProgress: { minW: 3, minH: 2, defaultW: 3, defaultH: 2, allowMultiple: false, configKeys: [] },
+  choresProgress: { minW: 2, minH: 2, defaultW: 3, defaultH: 2, allowMultiple: false, configKeys: [] },
   starBalances: { minW: 2, minH: 2, defaultW: 2, defaultH: 2, allowMultiple: false, configKeys: [] },
   list: { minW: 2, minH: 3, defaultW: 3, defaultH: 4, allowMultiple: true, configKeys: ['listId'] },
   meals: { minW: 2, minH: 2, defaultW: 3, defaultH: 2, allowMultiple: false, configKeys: [] },

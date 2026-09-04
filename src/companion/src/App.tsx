@@ -5,13 +5,15 @@ import { ListsPage } from './pages/ListsPage'
 import { MealsPage } from './pages/MealsPage'
 import { ChoresPage } from './pages/ChoresPage'
 import { AgendaPage } from './pages/AgendaPage'
+import { RecipesPage } from './pages/RecipesPage'
 import { PairScreen } from './pages/PairScreen'
 
-type TabId = 'lists' | 'meals' | 'chores' | 'agenda'
+type TabId = 'lists' | 'meals' | 'chores' | 'agenda' | 'recipes'
 
 const TABS: { id: TabId; label: string; icon: string }[] = [
   { id: 'lists', label: 'Lists', icon: '✓' },
   { id: 'meals', label: 'Meals', icon: '🍽' },
+  { id: 'recipes', label: 'Recipes', icon: '📖' },
   { id: 'chores', label: 'Chores', icon: '★' },
   { id: 'agenda', label: 'Agenda', icon: '▤' }
 ]
@@ -38,6 +40,7 @@ export default function App() {
         <div key={tab} className="animate-rise">
           {tab === 'lists' && <ListsPage />}
           {tab === 'meals' && <MealsPage />}
+          {tab === 'recipes' && <RecipesPage />}
           {tab === 'chores' && <ChoresPage />}
           {tab === 'agenda' && <AgendaPage />}
         </div>

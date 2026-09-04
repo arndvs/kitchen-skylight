@@ -43,6 +43,22 @@ describe('chores + rewards', () => {
     expect(chores.getDay('2026-06-15')).toHaveLength(1) // next Mon
   })
 
+  it('bi-weekly chores are due every other week on their weekdays', () => {
+    // 2026-06-08 is a Monday; interval 2 means every other week
+    chores.create({
+      title: 'Deep clean',
+      personId: 'kid1',
+      starsValue: 8,
+      recurrence: { freq: 'weekly', interval: 2, byWeekdays: [0] },
+      anchorDate: '2026-06-08'
+    })
+    expect(chores.getDay('2026-06-08')).toHaveLength(1) // anchor week Mon
+    expect(chores.getDay('2026-06-15')).toHaveLength(0) // next week skipped
+    expect(chores.getDay('2026-06-22')).toHaveLength(1) // two weeks later
+    expect(chores.getDay('2026-06-29')).toHaveLength(0) // skipped again
+    expect(chores.getDay('2026-07-06')).toHaveLength(1) // back on
+  })
+
   it('one-time chores appear only on the anchor date', () => {
     chores.create({ title: 'Clean garage', personId: 'kid1', starsValue: 10, recurrence: null, anchorDate: '2026-06-10' })
     expect(chores.getDay('2026-06-10')).toHaveLength(1)

@@ -24,7 +24,7 @@
   --shadow-float: 0 4px 12px rgba(72, 60, 38, 0.14), 0 24px 56px -16px rgba(72, 60, 38, 0.28);
 }
 
-/* warm dark palette — kiosk: sunset to sunrise; companion: prefers-color-scheme */
+/* warm dark palette — kiosk: 7am–6pm light window; companion: prefers-color-scheme */
 .dark {
   --color-paper: #17130e;
   --color-paper-deep: #241e16;

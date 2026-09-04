@@ -8,7 +8,7 @@ import './styles.css'
 // pairing QR puts the token in the fragment; stash it before anything renders
 adoptTokenFromUrl()
 
-// the companion follows the phone's own theme (the kiosk follows the sun)
+// the companion follows the phone's own theme (the kiosk uses a fixed 7am–6pm window)
 const darkQuery = window.matchMedia('(prefers-color-scheme: dark)')
 const applyTheme = (): void => {
   document.documentElement.classList.toggle('dark', darkQuery.matches)

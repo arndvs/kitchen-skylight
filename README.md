@@ -25,8 +25,8 @@ chores progress, and star balances:
 
 ![Home screen](docs/screenshots/home.png)
 
-At sunset it switches itself to a warm dark palette (here with a live news tile
-swapped in):
+Outside the 7am–6pm light window it switches itself to a warm dark palette
+(here with a live news tile swapped in):
 
 ![Home screen in dark mode](docs/screenshots/home-dark.png)
 
@@ -108,10 +108,9 @@ which seeds demo data through the app's real IPC layer — so they stay honest.
 - Launch-on-startup toggle, single-instance lock, crash auto-relaunch
 - Built-in on-screen keyboard (no reliance on the Windows touch keyboard)
 - Warm "paper planner" visual design (Fraunces + Nunito, linen + ember palette)
-- **Dark mode that follows the sun**: by default the display switches to a warm
-  dark palette at sunset and back at sunrise — sun times computed locally from
-  your weather location (no network), falling back to 7pm–7am without one.
-  Settings → General → Appearance also offers always-Light / always-Dark.
+- **Automatic light/dark mode**: by default the display is light from 7am to
+  6pm and switches to a warm dark palette the rest of the time. Settings →
+  General → Appearance also offers always-Light / always-Dark.
 
 ### Companion app (phones)
 

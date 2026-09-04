@@ -154,3 +154,11 @@ export const LockIcon = (p: IconProps) => (
     <path d="M8 11V7a4 4 0 0 1 8 0v4" />
   </svg>
 )
+
+export const MicIcon = (p: IconProps) => (
+  <svg {...base(p)}>
+    <rect x="9" y="2" width="6" height="12" rx="3" />
+    <path d="M5 10a7 7 0 0 0 14 0" />
+    <path d="M12 17v4" />
+  </svg>
+)

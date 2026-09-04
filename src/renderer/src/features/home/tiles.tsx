@@ -20,7 +20,7 @@ import { useKioskState } from '../../stores/kioskStore'
 import { useTimers } from '../../stores/timerStore'
 import { formatDuration } from '@shared/timer'
 import { startAlarm, stopAlarm } from '../../lib/alarm'
-import { weatherIcon } from '../weather/WeatherHeader'
+import { weatherIcon, WeatherDialog } from '../weather/WeatherHeader'
 import { SLOT_META } from '../meals/Meals'
 import { ZONE } from '../../stores/uiStore'
 import { formatTime, initials, textOn } from '../../lib/format'
@@ -130,33 +130,43 @@ export function WeekAgendaTile({ compact }: TileProps) {
 export function WeatherTile({ tile, compact }: TileProps) {
   const { data: settings } = useSettings()
   const { data: weather } = useWeather()
+  const [open, setOpen] = useState(false)
   if (!settings?.weather) return <Placeholder>Set a location in Settings → General</Placeholder>
   if (!weather) return <Placeholder>Loading forecast…</Placeholder>
   const Icon = weatherIcon(weather.code, weather.isDay)
   const showForecast = tile.w >= 3 && !compact
   return (
-    <div className="flex h-full flex-col overflow-hidden">
-      <div className="flex flex-1 items-center justify-center gap-3">
-        <Icon size={compact ? 34 : 44} className="text-ember-deep" />
-        <span className={`font-display ${compact ? 'text-4xl' : 'text-5xl'}`}>{weather.temperature}°</span>
-      </div>
-      {showForecast && (
-        <div className="flex shrink-0 justify-around pb-1">
-          {weather.daily.slice(0, 4).map((d, i) => {
-            const DayIcon = weatherIcon(d.code, true)
-            return (
-              <span key={d.date} className="flex flex-col items-center gap-0.5">
-                <span className="text-[10px] font-extrabold text-ink-faint uppercase">
-                  {i === 0 ? 'Now' : DateTime.fromISO(d.date).toFormat('ccc')}
-                </span>
-                <DayIcon size={16} className="text-ember-deep" />
-                <span className="text-xs font-bold">{d.high}°</span>
-              </span>
-            )
-          })}
+    <>
+      <div
+        className="flex h-full flex-col overflow-hidden"
+        onClick={(e) => {
+          e.stopPropagation()
+          setOpen(true)
+        }}
+      >
+        <div className="flex flex-1 items-center justify-center gap-3">
+          <Icon size={compact ? 34 : 44} className="text-ember-deep" />
+          <span className={`font-display ${compact ? 'text-4xl' : 'text-5xl'}`}>{weather.temperature}°</span>
         </div>
-      )}
-    </div>
+        {showForecast && (
+          <div className="flex shrink-0 justify-around pb-1">
+            {weather.daily.slice(0, 4).map((d, i) => {
+              const DayIcon = weatherIcon(d.code, true)
+              return (
+                <span key={d.date} className="flex flex-col items-center gap-0.5">
+                  <span className="text-[10px] font-extrabold text-ink-faint uppercase">
+                    {i === 0 ? 'Now' : DateTime.fromISO(d.date).toFormat('ccc')}
+                  </span>
+                  <DayIcon size={16} className="text-ember-deep" />
+                  <span className="text-xs font-bold">{d.high}°</span>
+                </span>
+              )
+            })}
+          </div>
+        )}
+      </div>
+      <WeatherDialog open={open} onClose={() => setOpen(false)} />
+    </>
   )
 }
 
@@ -239,9 +249,32 @@ export function StarBalancesTile({ compact }: TileProps) {
 export function ListTile({ tile, compact }: TileProps) {
   const { data: lists = [] } = useLists()
   const list = lists.find((l) => l.id === tile.config?.listId)
+  const containerRef = useRef<HTMLDivElement | null>(null)
+  const [fitCount, setFitCount] = useState(compact ? 4 : 8)
+  const unchecked = list ? list.items.filter((i) => !i.checked) : []
+
+  // Fill the tile's available height with items instead of a fixed count, so a
+  // tall tile shows more items and only clips (with "+N more") when it must.
+  // Hooks must run before any early return — React errors if the hook count
+  // changes between renders.
+  useEffect(() => {
+    const el = containerRef.current
+    if (!el) return
+    const measure = (): void => {
+      // each row is ~24px tall (text-base) plus 4px gap; leave room for the
+      // "+N more" line and the header
+      const rowH = compact ? 22 : 26
+      const avail = el.clientHeight - (unchecked.length > 0 ? 20 : 0)
+      setFitCount(Math.max(1, Math.floor(avail / rowH)))
+    }
+    measure()
+    const ro = new ResizeObserver(measure)
+    ro.observe(el)
+    return () => ro.disconnect()
+  }, [compact, unchecked.length])
+
   if (!list) return <Placeholder>List not found — re-add this tile</Placeholder>
-  const unchecked = list.items.filter((i) => !i.checked)
-  const maxItems = compact ? 4 : 8
+
   return (
     <div className="flex h-full flex-col overflow-hidden">
       <div className="mb-1.5 flex shrink-0 items-center gap-1.5">
@@ -251,15 +284,15 @@ export function ListTile({ tile, compact }: TileProps) {
       {unchecked.length === 0 ? (
         <Placeholder>All done!</Placeholder>
       ) : (
-        <div className="flex min-h-0 flex-col gap-1 overflow-hidden">
-          {unchecked.slice(0, maxItems).map((item) => (
-            <span key={item.id} className="flex items-center gap-2">
+        <div ref={containerRef} className="flex min-h-0 flex-1 flex-col gap-1 overflow-hidden">
+          {unchecked.slice(0, fitCount).map((item) => (
+            <span key={item.id} className="flex shrink-0 items-center gap-2">
               <span className="h-2 w-2 shrink-0 rounded-full border-2" style={{ borderColor: list.color }} />
               <span className={`truncate font-bold ${compact ? 'text-sm' : 'text-base'}`}>{item.text}</span>
             </span>
           ))}
-          {unchecked.length > maxItems && (
-            <span className="text-xs font-extrabold text-ink-faint">+{unchecked.length - maxItems} more</span>
+          {unchecked.length > fitCount && (
+            <span className="shrink-0 text-xs font-extrabold text-ink-faint">+{unchecked.length - fitCount} more</span>
           )}
         </div>
       )}

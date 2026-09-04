@@ -44,6 +44,13 @@ const gotLock = app.requestSingleInstanceLock()
 if (!gotLock) {
   app.quit()
 } else {
+  // The kiosk's Intel integrated GPU can render a magenta/black screen after
+  // reinstall (Chromium GPU process failure). Software rendering is reliable
+  // on this hardware and the UI is simple enough that it costs nothing.
+  app.disableHardwareAcceleration()
+  app.commandLine.appendSwitch('disable-gpu')
+  app.commandLine.appendSwitch('disable-gpu-compositing')
+
   app.on('second-instance', () => {
     const [win] = BrowserWindow.getAllWindows()
     if (win) {

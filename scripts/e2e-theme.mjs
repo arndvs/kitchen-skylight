@@ -33,16 +33,16 @@ try {
   await setTheme('light')
   await page.waitForFunction(() => !document.documentElement.classList.contains('dark'), null, { timeout: 5000 })
 
-  // auto without a location follows the 19:00–07:00 fallback
+  // auto follows the fixed 7am–6pm light window
   await setTheme('auto')
   const hour = new Date().getHours()
-  const expectDark = hour >= 19 || hour < 7
+  const expectDark = hour < 7 || hour >= 18
   await page.waitForTimeout(600)
   if ((await isDark()) !== expectDark) {
     throw new Error(`auto theme mismatch: local hour ${hour}, expected dark=${expectDark}`)
   }
 
-  console.log('THEME E2E PASS: dark/light apply instantly, auto follows the sun rule')
+  console.log('THEME E2E PASS: dark/light apply instantly, auto follows the 7am–6pm rule')
 } finally {
   await app.close()
   rmSync(userData, { recursive: true, force: true })

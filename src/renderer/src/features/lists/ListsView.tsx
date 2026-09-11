@@ -8,8 +8,6 @@ import { CheckIcon, PencilIcon, PlusIcon, XIcon } from '../../components/icons'
 import { textOn } from '../../lib/format'
 
 const DRAG_SLOP_PX = 8
-/** Card width (w-80 = 320px) + container gap (gap-4 = 16px) — the horizontal slot pitch. */
-const CARD_STRIDE_PX = 336
 
 interface DragState {
   id: string
@@ -137,6 +135,7 @@ export function ListsView() {
   // latest state — a trailing pointermove after pointerup must not resurrect
   // a finished drag (which previously blocked every subsequent drag).
   const dragRef = useRef<DragState | null>(null)
+  const containerRef = useRef<HTMLDivElement | null>(null)
 
   const openEditor = (l: ListDto | 'new'): void => {
     setEditing(l)
@@ -177,12 +176,28 @@ export function ListsView() {
     const dy = e.clientY - g.startY
     const started = g.started || Math.hypot(dx, dy) > DRAG_SLOP_PX
     if (!started) return
-    const from = lists.findIndex((l) => l.id === g.id)
-    const to = Math.min(Math.max(from + Math.round(dx / CARD_STRIDE_PX), 0), lists.length - 1)
     const next = { ...g, dx, dy, started }
     dragRef.current = next
     setDrag(next)
-    setOverIndex(to)
+    // Find the slot the pointer is currently over by comparing the pointer's
+    // client position against each card's bounding box. Works for a wrapped
+    // (multi-row) layout.
+    const container = containerRef.current
+    if (!container) return
+    const cards = Array.from(container.querySelectorAll<HTMLElement>('[data-list-id]'))
+    let best = -1
+    let bestDist = Infinity
+    cards.forEach((el, i) => {
+      const r = el.getBoundingClientRect()
+      const cx = r.left + r.width / 2
+      const cy = r.top + r.height / 2
+      const dist = Math.hypot(e.clientX - cx, e.clientY - cy)
+      if (dist < bestDist) {
+        bestDist = dist
+        best = i
+      }
+    })
+    if (best !== -1) setOverIndex(best)
   }
 
   const endDrag = (e: PointerEvent, commit: boolean): void => {
@@ -236,7 +251,7 @@ export function ListsView() {
   }, [lists, drag?.started, overIndex])
 
   return (
-    <div className="flex h-full items-start gap-4 overflow-x-auto px-6 pb-6">
+    <div ref={containerRef} className="flex h-full flex-wrap content-start items-start gap-4 overflow-y-auto px-6 pb-6">
       {ordered.map((list, i) => (
         <div key={list.id} data-list-id={list.id} className="animate-rise flex max-h-full" style={{ animationDelay: `${i * 60}ms` }}>
           <ListCard

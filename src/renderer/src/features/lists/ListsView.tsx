@@ -71,6 +71,7 @@ function ListCard({
           type="button"
           aria-label={`Reorder ${list.name}`}
           {...dragHandlers}
+          style={{ touchAction: 'none' }}
           className="pressable flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-ink-faint hover:bg-paper-deep"
         >
           <GripIcon size={20} />

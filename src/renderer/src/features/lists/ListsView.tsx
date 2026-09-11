@@ -1,4 +1,4 @@
-import { useMemo, useState, type CSSProperties, type PointerEvent } from 'react'
+import { useMemo, useRef, useState, type CSSProperties, type PointerEvent } from 'react'
 import type { ListDto, ListKind } from '@shared/types'
 import { PERSON_COLORS } from '@shared/types'
 import { useListMutations, useLists } from '../../api/hooks'
@@ -133,6 +133,10 @@ export function ListsView() {
   const [kind, setKind] = useState<ListKind>('grocery')
   const [drag, setDrag] = useState<DragState | null>(null)
   const [overIndex, setOverIndex] = useState<number | null>(null)
+  // The gesture is tracked in a ref so move/end handlers always read the
+  // latest state — a trailing pointermove after pointerup must not resurrect
+  // a finished drag (which previously blocked every subsequent drag).
+  const dragRef = useRef<DragState | null>(null)
 
   const openEditor = (l: ListDto | 'new'): void => {
     setEditing(l)
@@ -151,9 +155,9 @@ export function ListsView() {
   // Drag-and-drop reorder. The dragged card is lifted with a transient
   // transform; the others slide to make room via a reordered render order.
   const beginDrag = (id: string, e: PointerEvent): void => {
-    if (editing || drag || !e.isPrimary) return
+    if (editing || dragRef.current || !e.isPrimary) return
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-    setDrag({
+    const g: DragState = {
       id,
       pointerId: e.pointerId,
       startX: e.clientX,
@@ -161,25 +165,33 @@ export function ListsView() {
       dx: 0,
       dy: 0,
       started: false
-    })
+    }
+    dragRef.current = g
+    setDrag(g)
   }
 
   const moveDrag = (e: PointerEvent): void => {
-    if (!drag || e.pointerId !== drag.pointerId) return
-    const dx = e.clientX - drag.startX
-    const dy = e.clientY - drag.startY
-    const started = drag.started || Math.hypot(dx, dy) > DRAG_SLOP_PX
+    const g = dragRef.current
+    if (!g || e.pointerId !== g.pointerId) return
+    const dx = e.clientX - g.startX
+    const dy = e.clientY - g.startY
+    const started = g.started || Math.hypot(dx, dy) > DRAG_SLOP_PX
     if (!started) return
-    const from = lists.findIndex((l) => l.id === drag.id)
+    const from = lists.findIndex((l) => l.id === g.id)
     const to = Math.min(Math.max(from + Math.round(dx / CARD_STRIDE_PX), 0), lists.length - 1)
-    setDrag({ ...drag, dx, dy, started })
+    const next = { ...g, dx, dy, started }
+    dragRef.current = next
+    setDrag(next)
     setOverIndex(to)
   }
 
   const endDrag = (e: PointerEvent, commit: boolean): void => {
-    if (!drag || e.pointerId !== drag.pointerId) return
-    if (commit && drag.started && overIndex !== null) {
-      const from = lists.findIndex((l) => l.id === drag.id)
+    const g = dragRef.current
+    if (!g || e.pointerId !== g.pointerId) return
+    // clear the ref FIRST so a trailing pointermove can't resurrect the drag
+    dragRef.current = null
+    if (commit && g.started && overIndex !== null) {
+      const from = lists.findIndex((l) => l.id === g.id)
       if (from !== -1 && from !== overIndex) {
         const next = [...lists]
         const [moved] = next.splice(from, 1)
@@ -198,12 +210,16 @@ export function ListsView() {
     onPointerCancel: (e: PointerEvent) => endDrag(e, false)
   })
 
+  // The dragged card snaps to its slot: the `ordered` render order already
+  // places it where it's being dropped, so we only lift it (scale + shadow +
+  // slight rise) instead of free-following the pointer.
   const dragStyle = (id: string): CSSProperties => {
     if (!drag?.started || drag.id !== id) return {}
     return {
-      transform: `translate(${drag.dx}px, ${drag.dy}px) scale(1.02)`,
+      transform: 'translateY(-6px) scale(1.03)',
       zIndex: 20,
-      transition: 'none'
+      boxShadow: '0 18px 40px rgba(0,0,0,0.25)',
+      transition: 'transform 120ms ease'
     }
   }
 

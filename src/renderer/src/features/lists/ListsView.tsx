@@ -222,7 +222,7 @@ export function ListsView() {
   return (
     <div className="flex h-full items-start gap-4 overflow-x-auto px-6 pb-6">
       {ordered.map((list, i) => (
-        <div key={list.id} className="animate-rise flex max-h-full" style={{ animationDelay: `${i * 60}ms` }}>
+        <div key={list.id} data-list-id={list.id} className="animate-rise flex max-h-full" style={{ animationDelay: `${i * 60}ms` }}>
           <ListCard
             list={list}
             onEdit={() => openEditor(list)}

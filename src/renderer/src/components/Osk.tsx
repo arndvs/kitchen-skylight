@@ -28,10 +28,14 @@ export const useOsk = create<OskState>((set) => ({
 }))
 
 /**
- * Voice input via the Web Speech API. Returns a `listen` function that starts
- * (or stops) dictation and appends the transcript to the current value.
- * `supported` is false when the browser has no speech recognition (e.g. the
- * Windows Speech Platform isn't installed) — the mic button is hidden then.
+ * Voice input via the Web Speech API. Returns a `listen` function that toggles
+ * dictation on/off and appends the transcript to the current value.
+ *
+ * The `listening` state is a pure user toggle: it stays engaged once the user
+ * taps the mic, and only turns off when they tap again. The recognition
+ * engine's end/error events do NOT yank the button off — on some Windows
+ * builds the engine fires onerror immediately after start(), which would
+ * otherwise make the button "click and instantly stop".
  */
 function useVoiceInput(): {
   supported: boolean
@@ -45,8 +49,9 @@ function useVoiceInput(): {
     ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)
 
   const listen = (onResult: (text: string) => void): void => {
-    if (recRef.current) {
-      recRef.current.stop()
+    // Toggle: if engaged, stop and disengage.
+    if (listening) {
+      recRef.current?.stop()
       recRef.current = null
       setListening(false)
       return
@@ -66,18 +71,18 @@ function useVoiceInput(): {
     }
     rec.lang = 'en-US'
     rec.interimResults = false
-    rec.continuous = false
+    rec.continuous = true
     rec.onresult = (e) => {
       const text = e.results[0]?.[0]?.transcript ?? ''
       if (text) onResult(text)
     }
+    // Keep the button engaged regardless of engine end/error events — the
+    // user controls when it turns off.
     rec.onend = () => {
       recRef.current = null
-      setListening(false)
     }
     rec.onerror = () => {
       recRef.current = null
-      setListening(false)
     }
     recRef.current = rec
     setListening(true)
@@ -85,7 +90,6 @@ function useVoiceInput(): {
       rec.start()
     } catch {
       recRef.current = null
-      setListening(false)
     }
   }
 

@@ -106,6 +106,7 @@ const MUTATION_DOMAINS: Partial<Record<IpcChannel, MutationDomain>> = {
   'lists:create': 'lists',
   'lists:update': 'lists',
   'lists:delete': 'lists',
+  'lists:reorder': 'lists',
   'listItems:add': 'lists',
   'listItems:toggle': 'lists',
   'listItems:delete': 'lists',
@@ -274,6 +275,7 @@ export function buildChannelTable(services: Services): ChannelTable {
   handle('lists:create', s.listCreateSchema, (req) => services.lists.create(req))
   handle('lists:update', s.listUpdateSchema, (req) => services.lists.update(req))
   handle('lists:delete', s.idSchema, (req) => services.lists.remove(req.id))
+  handle('lists:reorder', s.listReorderSchema, (req) => services.lists.reorder(req.ids))
   handle('listItems:add', s.listItemAddSchema, (req) => services.lists.addItem(req.listId, req.text))
   handle('listItems:toggle', s.idSchema, (req) => services.lists.toggleItem(req.id))
   handle('listItems:delete', s.idSchema, (req) => services.lists.removeItem(req.id))

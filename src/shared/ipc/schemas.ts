@@ -262,6 +262,7 @@ export const listUpdateSchema = z.object({
 
 export const listItemAddSchema = z.object({ listId: id, text: z.string().trim().min(1).max(300) })
 export const listIdSchema = z.object({ listId: id })
+export const listReorderSchema = z.object({ ids: z.array(id).min(1) })
 
 export const mealsRangeSchema = z.object({ start: isoDate, end: isoDate })
 export const mealSetSchema = z.object({

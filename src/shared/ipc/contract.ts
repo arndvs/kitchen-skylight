@@ -95,6 +95,7 @@ export type IpcContract = {
   'lists:create': { req: { name: string; color: string; kind: ListKind }; res: ListDto }
   'lists:update': { req: { id: string; name?: string; color?: string }; res: ListDto }
   'lists:delete': { req: { id: string }; res: void }
+  'lists:reorder': { req: { ids: string[] }; res: void }
   'listItems:add': { req: { listId: string; text: string }; res: ListItemDto }
   'listItems:toggle': { req: { id: string }; res: void }
   'listItems:delete': { req: { id: string }; res: void }

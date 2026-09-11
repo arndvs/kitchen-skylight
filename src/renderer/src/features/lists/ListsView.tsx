@@ -1,11 +1,25 @@
-import { useState } from 'react'
+import { useMemo, useState, type CSSProperties, type PointerEvent } from 'react'
 import type { ListDto, ListKind } from '@shared/types'
 import { PERSON_COLORS } from '@shared/types'
 import { useListMutations, useLists } from '../../api/hooks'
 import { BigButton, Dialog, FieldLabel, SegmentedControl } from '../../components/ui'
 import { OskInput } from '../../components/Osk'
-import { CheckIcon, PlusIcon, XIcon } from '../../components/icons'
+import { CheckIcon, GripIcon, PlusIcon, XIcon } from '../../components/icons'
 import { textOn } from '../../lib/format'
+
+const DRAG_SLOP_PX = 8
+/** Card width (w-80 = 320px) + container gap (gap-4 = 16px) — the horizontal slot pitch. */
+const CARD_STRIDE_PX = 336
+
+interface DragState {
+  id: string
+  pointerId: number
+  startX: number
+  startY: number
+  dx: number
+  dy: number
+  started: boolean
+}
 
 function AddItemRow({ listId }: { listId: string }) {
   const [text, setText] = useState('')
@@ -30,18 +44,38 @@ function AddItemRow({ listId }: { listId: string }) {
   )
 }
 
-function ListCard({ list, onEdit }: { list: ListDto; onEdit: () => void }) {
+function ListCard({
+  list,
+  onEdit,
+  dragHandlers,
+  dragStyle
+}: {
+  list: ListDto
+  onEdit: () => void
+  dragHandlers: { onPointerDown: (e: PointerEvent) => void; onPointerMove: (e: PointerEvent) => void; onPointerUp: (e: PointerEvent) => void; onPointerCancel: (e: PointerEvent) => void }
+  dragStyle: CSSProperties
+}) {
   const mutations = useListMutations()
   const checkedCount = list.items.filter((i) => i.checked).length
   return (
-    <div className="flex max-h-full w-80 shrink-0 flex-col rounded-card bg-card p-4 shadow-card">
-      <button type="button" onClick={onEdit} className="pressable mb-2 flex items-center gap-2.5 text-left">
-        <span className="h-5 w-5 rounded-full" style={{ backgroundColor: list.color }} />
-        <span className="min-w-0 flex-1 truncate font-display text-2xl font-semibold">{list.name}</span>
-        <span className="text-sm font-extrabold text-ink-faint">
-          {list.items.length - checkedCount}
-        </span>
-      </button>
+    <div className="flex max-h-full w-80 shrink-0 flex-col rounded-card bg-card p-4 shadow-card" style={dragStyle}>
+      <div className="mb-2 flex items-center gap-2.5">
+        <button type="button" onClick={onEdit} className="pressable flex min-w-0 flex-1 items-center gap-2.5 text-left">
+          <span className="h-5 w-5 rounded-full" style={{ backgroundColor: list.color }} />
+          <span className="min-w-0 flex-1 truncate font-display text-2xl font-semibold">{list.name}</span>
+          <span className="text-sm font-extrabold text-ink-faint">
+            {list.items.length - checkedCount}
+          </span>
+        </button>
+        <button
+          type="button"
+          aria-label={`Reorder ${list.name}`}
+          {...dragHandlers}
+          className="pressable flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-ink-faint hover:bg-paper-deep"
+        >
+          <GripIcon size={20} />
+        </button>
+      </div>
       <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">
         {list.items.map((item) => (
           <div key={item.id} className="group flex items-center gap-2.5 rounded-xl px-1 py-1 hover:bg-paper-deep/40">
@@ -93,6 +127,8 @@ export function ListsView() {
   const [name, setName] = useState('')
   const [color, setColor] = useState<string>(PERSON_COLORS[4])
   const [kind, setKind] = useState<ListKind>('grocery')
+  const [drag, setDrag] = useState<DragState | null>(null)
+  const [overIndex, setOverIndex] = useState<number | null>(null)
 
   const openEditor = (l: ListDto | 'new'): void => {
     setEditing(l)
@@ -108,11 +144,87 @@ export function ListsView() {
     setEditing(null)
   }
 
+  // Drag-and-drop reorder. The dragged card is lifted with a transient
+  // transform; the others slide to make room via a reordered render order.
+  const beginDrag = (id: string, e: PointerEvent): void => {
+    if (editing || drag || !e.isPrimary) return
+    ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
+    setDrag({
+      id,
+      pointerId: e.pointerId,
+      startX: e.clientX,
+      startY: e.clientY,
+      dx: 0,
+      dy: 0,
+      started: false
+    })
+  }
+
+  const moveDrag = (e: PointerEvent): void => {
+    if (!drag || e.pointerId !== drag.pointerId) return
+    const dx = e.clientX - drag.startX
+    const dy = e.clientY - drag.startY
+    const started = drag.started || Math.hypot(dx, dy) > DRAG_SLOP_PX
+    if (!started) return
+    const from = lists.findIndex((l) => l.id === drag.id)
+    const to = Math.min(Math.max(from + Math.round(dx / CARD_STRIDE_PX), 0), lists.length - 1)
+    setDrag({ ...drag, dx, dy, started })
+    setOverIndex(to)
+  }
+
+  const endDrag = (e: PointerEvent, commit: boolean): void => {
+    if (!drag || e.pointerId !== drag.pointerId) return
+    if (commit && drag.started && overIndex !== null) {
+      const from = lists.findIndex((l) => l.id === drag.id)
+      if (from !== -1 && from !== overIndex) {
+        const next = [...lists]
+        const [moved] = next.splice(from, 1)
+        next.splice(overIndex, 0, moved)
+        mutations.reorder.mutate({ ids: next.map((l) => l.id) })
+      }
+    }
+    setDrag(null)
+    setOverIndex(null)
+  }
+
+  const dragHandlers = (id: string) => ({
+    onPointerDown: (e: PointerEvent) => beginDrag(id, e),
+    onPointerMove: moveDrag,
+    onPointerUp: (e: PointerEvent) => endDrag(e, true),
+    onPointerCancel: (e: PointerEvent) => endDrag(e, false)
+  })
+
+  const dragStyle = (id: string): CSSProperties => {
+    if (!drag?.started || drag.id !== id) return {}
+    return {
+      transform: `translate(${drag.dx}px, ${drag.dy}px) scale(1.02)`,
+      zIndex: 20,
+      transition: 'none'
+    }
+  }
+
+  // Render order: the dragged card is pulled out and re-inserted at the hover
+  // slot so the others visibly slide out of the way while dragging.
+  const ordered = useMemo(() => {
+    if (!drag?.started || overIndex === null) return lists
+    const from = lists.findIndex((l) => l.id === drag.id)
+    if (from === -1) return lists
+    const next = [...lists]
+    const [moved] = next.splice(from, 1)
+    next.splice(overIndex, 0, moved)
+    return next
+  }, [lists, drag?.started, overIndex])
+
   return (
     <div className="flex h-full items-start gap-4 overflow-x-auto px-6 pb-6">
-      {lists.map((list, i) => (
+      {ordered.map((list, i) => (
         <div key={list.id} className="animate-rise flex max-h-full" style={{ animationDelay: `${i * 60}ms` }}>
-          <ListCard list={list} onEdit={() => openEditor(list)} />
+          <ListCard
+            list={list}
+            onEdit={() => openEditor(list)}
+            dragHandlers={dragHandlers(list.id)}
+            dragStyle={dragStyle(list.id)}
+          />
         </div>
       ))}
       <button

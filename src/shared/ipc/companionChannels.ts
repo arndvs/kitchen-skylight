@@ -11,6 +11,7 @@ export const COMPANION_CHANNELS: ReadonlySet<IpcChannel> = new Set<IpcChannel>([
   'lists:create',
   'lists:update',
   'lists:delete',
+  'lists:reorder',
   'listItems:add',
   'listItems:toggle',
   'listItems:delete',

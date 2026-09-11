@@ -48,6 +48,22 @@ describe('lists', () => {
     lists.remove(list.id)
     expect(lists.getAll()).toHaveLength(0)
   })
+
+  it('reorders lists by the given id order', () => {
+    const a = lists.create({ name: 'A', color: '#46A758', kind: 'custom' })
+    const b = lists.create({ name: 'B', color: '#0091FF', kind: 'custom' })
+    const c = lists.create({ name: 'C', color: '#FFB224', kind: 'custom' })
+    lists.reorder([c.id, a.id, b.id])
+    expect(lists.getAll().map((l) => l.name)).toEqual(['C', 'A', 'B'])
+  })
+
+  it('rejects a reorder that omits a live list', () => {
+    const a = lists.create({ name: 'A', color: '#46A758', kind: 'custom' })
+    lists.create({ name: 'B', color: '#0091FF', kind: 'custom' })
+    expect(() => lists.reorder([a.id])).toThrow(/every list exactly once/)
+    // unchanged
+    expect(lists.getAll().map((l) => l.name)).toEqual(['A', 'B'])
+  })
 })
 
 describe('meals', () => {

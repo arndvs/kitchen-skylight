@@ -246,6 +246,7 @@ export function useListMutations() {
       keys
     ),
     remove: useInvalidatingMutation((input: { id: string }) => ipcInvoke('lists:delete', input), keys),
+    reorder: useInvalidatingMutation((input: { ids: string[] }) => ipcInvoke('lists:reorder', input), keys),
     addItem: useInvalidatingMutation(
       (input: { listId: string; text: string }) => ipcInvoke('listItems:add', input),
       keys

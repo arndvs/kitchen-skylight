@@ -1,11 +1,11 @@
-import { and, asc, eq, isNull, max } from 'drizzle-orm'
+import { and, asc, count, eq, inArray, isNull, max } from 'drizzle-orm'
 import { DateTime } from 'luxon'
 import type { AppDb } from '../db/client'
 import { listItems, lists } from '../db/schema'
 import { uuidv7 } from '@shared/uuid'
 import { isoUtc } from '@shared/dates'
 import type { ListDto, ListItemDto, ListKind } from '@shared/types'
-import { notFound } from './errors'
+import { invalid, notFound } from './errors'
 
 function itemDto(row: typeof listItems.$inferSelect): ListItemDto {
   return { id: row.id, text: row.text, checked: row.checked, sortOrder: row.sortOrder }
@@ -67,6 +67,29 @@ export function createListsService(db: AppDb) {
     if (result.changes === 0) throw notFound('List')
   }
 
+  /** Persist a full ordering of list ids. Must cover every live list exactly once. */
+  function reorder(ids: string[]): void {
+    if (ids.length === 0) return
+    const [{ value: liveCount }] = db
+      .select({ value: count() })
+      .from(lists)
+      .where(isNull(lists.deletedAt))
+      .all()
+    const matched = db
+      .select({ id: lists.id })
+      .from(lists)
+      .where(and(inArray(lists.id, ids), isNull(lists.deletedAt)))
+      .all()
+    if (matched.length !== liveCount || matched.length !== ids.length) {
+      throw invalid('Reorder must include every list exactly once')
+    }
+    db.transaction((tx) => {
+      for (const [i, id] of ids.entries()) {
+        tx.update(lists).set({ sortOrder: i + 1 }).where(eq(lists.id, id)).run()
+      }
+    })
+  }
+
   function addItem(listId: string, text: string): ListItemDto {
     const [list] = db.select().from(lists).where(and(eq(lists.id, listId), isNull(lists.deletedAt))).all()
     if (!list) throw notFound('List')
@@ -106,7 +129,7 @@ export function createListsService(db: AppDb) {
     db.delete(listItems).where(and(eq(listItems.listId, listId), eq(listItems.checked, true))).run()
   }
 
-  return { getAll, create, update, remove, addItem, toggleItem, removeItem, clearChecked }
+  return { getAll, create, update, remove, reorder, addItem, toggleItem, removeItem, clearChecked }
 }
 
 export type ListsService = ReturnType<typeof createListsService>

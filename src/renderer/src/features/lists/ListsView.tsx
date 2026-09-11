@@ -4,7 +4,7 @@ import { PERSON_COLORS } from '@shared/types'
 import { useListMutations, useLists } from '../../api/hooks'
 import { BigButton, Dialog, FieldLabel, SegmentedControl } from '../../components/ui'
 import { OskInput } from '../../components/Osk'
-import { CheckIcon, GripIcon, PlusIcon, XIcon } from '../../components/icons'
+import { CheckIcon, PencilIcon, PlusIcon, XIcon } from '../../components/icons'
 import { textOn } from '../../lib/format'
 
 const DRAG_SLOP_PX = 8
@@ -59,22 +59,25 @@ function ListCard({
   const checkedCount = list.items.filter((i) => i.checked).length
   return (
     <div className="flex max-h-full w-80 shrink-0 flex-col rounded-card bg-card p-4 shadow-card" style={dragStyle}>
-      <div className="mb-2 flex items-center gap-2.5">
-        <button type="button" onClick={onEdit} className="pressable flex min-w-0 flex-1 items-center gap-2.5 text-left">
-          <span className="h-5 w-5 rounded-full" style={{ backgroundColor: list.color }} />
-          <span className="min-w-0 flex-1 truncate font-display text-2xl font-semibold">{list.name}</span>
-          <span className="text-sm font-extrabold text-ink-faint">
-            {list.items.length - checkedCount}
-          </span>
-        </button>
+      {/* the whole header is the drag handle — grab anywhere on it to reorder */}
+      <div
+        {...dragHandlers}
+        style={{ touchAction: 'none' }}
+        className="mb-2 flex cursor-grab items-center gap-2.5 select-none"
+      >
+        <span className="h-5 w-5 shrink-0 rounded-full" style={{ backgroundColor: list.color }} />
+        <span className="min-w-0 flex-1 truncate font-display text-2xl font-semibold">{list.name}</span>
+        <span className="text-sm font-extrabold text-ink-faint">
+          {list.items.length - checkedCount}
+        </span>
         <button
           type="button"
-          aria-label={`Reorder ${list.name}`}
-          {...dragHandlers}
-          style={{ touchAction: 'none' }}
+          aria-label={`Edit ${list.name}`}
+          onPointerDown={(e) => e.stopPropagation()}
+          onClick={onEdit}
           className="pressable flex h-12 w-12 shrink-0 items-center justify-center rounded-xl text-ink-faint hover:bg-paper-deep"
         >
-          <GripIcon size={20} />
+          <PencilIcon size={18} />
         </button>
       </div>
       <div className="flex min-h-0 flex-1 flex-col gap-1 overflow-y-auto">

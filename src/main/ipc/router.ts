@@ -25,6 +25,7 @@ import type { Updater } from '../updater'
 import type { RssService } from '../services/rssService'
 import type { CameraService } from '../services/cameraService'
 import type { BirdNetService } from '../services/birdnetService'
+import type { SttService } from '../services/sttService'
 import type { CompanionServer } from '../companion/companionServer'
 
 export interface Services {
@@ -48,6 +49,7 @@ export interface Services {
   rss: RssService
   camera: CameraService
   birdnet: BirdNetService
+  stt: SttService
   companion: CompanionServer
 }
 
@@ -293,6 +295,8 @@ export function buildChannelTable(services: Services): ChannelTable {
   handle('rss:getFeed', s.rssFeedSchema, (req) => services.rss.getFeed(req.feedId))
 
   handle('birdnet:getDetections', s.birdnetUrlSchema, (req) => services.birdnet.getDetections(req.url))
+
+  handle('stt:transcribe', s.sttTranscribeSchema, async (req) => ({ text: await services.stt.transcribe(req.audio) }))
 
   handle('camera:list', null, () => services.camera.list())
   handle('camera:add', s.cameraAddSchema, (req) => services.camera.add(req.name, req.url))

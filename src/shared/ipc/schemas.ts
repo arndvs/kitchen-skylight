@@ -158,6 +158,11 @@ export const settingsPatchSchema = z.object({
 export const idSchema = z.object({ id })
 export const voidSchema = z.void().or(z.undefined()).or(z.null())
 
+/** Raw webm/opus bytes from MediaRecorder. Capped to ~30s of audio. */
+export const sttTranscribeSchema = z.object({
+  audio: z.array(z.number()).max(16_000 * 30 * 2)
+})
+
 export const googleCredentialsSchema = z.object({
   clientId: z.string().trim().min(10),
   clientSecret: z.string().trim().min(5)

@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@googleapis/calendar": "^15.0.0",
+    "@huggingface/transformers": "^4.2.0",
     "better-sqlite3": "^12.4.1",
     "drizzle-orm": "^0.38.4",
     "electron-updater": "^6.8.9",

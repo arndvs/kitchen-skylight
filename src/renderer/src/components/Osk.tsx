@@ -3,6 +3,7 @@ import { create } from 'zustand'
 import Keyboard from 'react-simple-keyboard'
 import 'react-simple-keyboard/build/css/index.css'
 import { MicIcon } from './icons'
+import { ipcInvoke } from '../api/client'
 
 interface OskTarget {
   id: string
@@ -28,72 +29,66 @@ export const useOsk = create<OskState>((set) => ({
 }))
 
 /**
- * Voice input via the Web Speech API. Returns a `listen` function that toggles
- * dictation on/off and appends the transcript to the current value.
+ * Voice input. The mic button is a pure user toggle: it stays engaged once
+ * tapped and only turns off on a second tap. While engaged we capture mic
+ * audio with MediaRecorder; on stop we send the raw webm bytes to the main
+ * process, which decodes and transcribes them locally via Transformers.js
+ * (Whisper) and returns the text. No cloud calls, no API keys.
  *
- * The `listening` state is a pure user toggle: it stays engaged once the user
- * taps the mic, and only turns off when they tap again. The recognition
- * engine's end/error events do NOT yank the button off — on some Windows
- * builds the engine fires onerror immediately after start(), which would
- * otherwise make the button "click and instantly stop".
+ * (The old Web Speech API path is gone — `webkitSpeechRecognition` can never
+ * work in Electron, which is Chromium without Google's bundled speech backend.)
  */
 function useVoiceInput(): {
   supported: boolean
   listening: boolean
+  busy: boolean
   listen: (onResult: (text: string) => void) => void
 } {
   const [listening, setListening] = useState(false)
+  const [busy, setBusy] = useState(false)
   const recRef = useRef<{ stop: () => void } | null>(null)
-  const supported =
-    typeof window !== 'undefined' &&
-    ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window)
+  const supported = typeof navigator !== 'undefined' && !!navigator.mediaDevices?.getUserMedia
 
   const listen = (onResult: (text: string) => void): void => {
-    // Toggle: if engaged, stop and disengage.
+    // Toggle: if engaged, stop recording and transcribe.
     if (listening) {
       recRef.current?.stop()
       recRef.current = null
       setListening(false)
       return
     }
-    const SR = (window as unknown as { webkitSpeechRecognition?: new () => unknown; SpeechRecognition?: new () => unknown })
-    const Ctor = SR.webkitSpeechRecognition ?? SR.SpeechRecognition
-    if (!Ctor) return
-    const rec = new Ctor() as {
-      lang: string
-      interimResults: boolean
-      continuous: boolean
-      onresult: ((e: { results: { [i: number]: { [j: number]: { transcript: string } } } }) => void) | null
-      onend: (() => void) | null
-      onerror: (() => void) | null
-      start: () => void
-      stop: () => void
-    }
-    rec.lang = 'en-US'
-    rec.interimResults = false
-    rec.continuous = true
-    rec.onresult = (e) => {
-      const text = e.results[0]?.[0]?.transcript ?? ''
-      if (text) onResult(text)
-    }
-    // Keep the button engaged regardless of engine end/error events — the
-    // user controls when it turns off.
-    rec.onend = () => {
-      recRef.current = null
-    }
-    rec.onerror = () => {
-      recRef.current = null
-    }
-    recRef.current = rec
-    setListening(true)
-    try {
-      rec.start()
-    } catch {
-      recRef.current = null
-    }
+    if (busy) return
+    void (async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+        const rec = new MediaRecorder(stream)
+        const chunks: Blob[] = []
+        rec.ondataavailable = (e) => chunks.push(e.data)
+        rec.onstop = async () => {
+          try {
+            setBusy(true)
+            const blob = new Blob(chunks, { type: 'audio/webm' })
+            const buf = new Uint8Array(await blob.arrayBuffer())
+            // Send the raw webm bytes over IPC; the main process decodes to
+            // 16kHz PCM with ffmpeg and runs local Whisper transcription.
+            const { text } = await ipcInvoke('stt:transcribe', { audio: Array.from(buf) })
+            if (text) onResult(text)
+          } catch (err) {
+            console.error('[osk] transcription failed:', err)
+          } finally {
+            setBusy(false)
+          }
+        }
+        rec.start()
+        recRef.current = { stop: () => rec.stop() }
+        setListening(true)
+      } catch (err) {
+        console.error('[osk] mic start failed:', err)
+      }
+    })()
   }
 
-  return { supported, listening, listen }
+  return { supported, listening, busy, listen }
 }
 
 export function OskInput({
@@ -170,7 +165,7 @@ export function OskTray() {
   const { target, close, echo } = useOsk()
   const keyboardRef = useRef<{ setInput: (v: string) => void } | null>(null)
   const [layout, setLayout] = useState<'default' | 'shift' | 'numbers'>('default')
-  const { supported, listening, listen } = useVoiceInput()
+  const { supported, listening, busy, listen } = useVoiceInput()
 
   useEffect(() => {
     if (target) keyboardRef.current?.setInput(target.get())
@@ -204,14 +199,15 @@ export function OskTray() {
       <div className="mx-auto max-w-4xl">
         <div className="mb-2 flex items-center justify-between">
           <span className="text-sm font-bold text-ink-faint">
-            {listening ? 'Listening… tap the mic to stop' : 'Tap the mic to speak'}
+            {busy ? 'Transcribing…' : listening ? 'Listening… tap the mic to stop' : 'Tap the mic to speak'}
           </span>
           {supported && (
             <button
               type="button"
               onPointerDown={(e) => e.stopPropagation()}
               onClick={() => listen((text) => target.set(target.get() + (target.get() ? ' ' : '') + text))}
-              className={`pressable flex h-11 w-11 items-center justify-center rounded-full transition-colors ${
+              disabled={busy}
+              className={`pressable flex h-11 w-11 items-center justify-center rounded-full transition-colors ${busy ? 'opacity-50' : ''} ${
                 listening ? 'bg-ember text-white' : 'bg-paper-deep text-ink-soft'
               }`}
               aria-label={listening ? 'Stop listening' : 'Speak to type'}

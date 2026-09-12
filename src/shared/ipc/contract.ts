@@ -197,6 +197,13 @@ export type IpcContract = {
   'auth:setPin': { req: { pin: string | null }; res: void }
   'auth:lock': { req: void; res: void }
 
+  /**
+   * Transcribe a short mic recording locally via Transformers.js (Whisper).
+   * `audio` is the raw webm/opus bytes captured by MediaRecorder. Returns the
+   * transcript, or null when nothing intelligible was heard.
+   */
+  'stt:transcribe': { req: { audio: number[] }; res: { text: string | null } }
+
   'sync:now': { req: void; res: void }
   'sync:getStatus': {
     req: void

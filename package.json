@@ -1,6 +1,6 @@
 {
   "name": "kitchen-skylight",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "description": "Kitchen Skylight — family calendar, recipes, and home automation hub (fork of OpenSkyLight)",
   "main": "./out/main/index.js",
   "author": "arndvs",

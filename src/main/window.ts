@@ -32,6 +32,9 @@ export function createMainWindow(): BrowserWindow {
   win.webContents.session.setPermissionRequestHandler((_wc, permission, callback) => {
     callback(permission === 'media')
   })
+  // Also grant the synchronous permission check so getUserMedia resolves
+  // without waiting on a request round-trip.
+  win.webContents.session.setPermissionCheckHandler((_wc, permission) => permission === 'media')
   // Any external link goes to the system browser, never inside the kiosk
   win.webContents.setWindowOpenHandler(({ url }) => {
     void shell.openExternal(url)

@@ -58,6 +58,11 @@ function useVoiceInput(): {
       return
     }
     if (busy) return
+    // Engage the button immediately so it visibly stays pressed on tap.
+    // getUserMedia is async and can reject (permission/device), but the user
+    // should see the mic light up the moment they touch it — we only back out
+    // if mic acquisition actually fails.
+    setListening(true)
     void (async () => {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
@@ -81,9 +86,11 @@ function useVoiceInput(): {
         }
         rec.start()
         recRef.current = { stop: () => rec.stop() }
-        setListening(true)
       } catch (err) {
         console.error('[osk] mic start failed:', err)
+        // Mic couldn't be acquired — release the engaged state so the button
+        // doesn't stay stuck "listening".
+        setListening(false)
       }
     })()
   }
